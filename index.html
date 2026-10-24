@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal Lost - Trench Relay 09</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      background: #030608;
+      color: #8ce99a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .hud-bar {
+      width: 920px;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #071014;
+      border: 1px solid #16302a;
+      border-bottom: none;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+    canvas {
+      border: 1px solid #16302a;
+      background: #020507;
+      box-shadow: 0 0 60px rgba(16, 185, 129, 0.09);
+      cursor: crosshair;
+    }
+    .controls {
+      width: 920px;
+      padding: 10px 16px;
+      background: #071014;
+      border: 1px solid #16302a;
+      border-top: none;
+      font-size: 12px;
+      color: #52796f;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud-bar">
+    <span id="statusTxt">TRENCH RELAY 09 // DEPTH 3,840m</span>
+    <span id="beaconsTxt">TRANSPONDERS CALIBRATED 0 / 4</span>
+    <span id="powerTxt">BATTERY 100% // HEARTBEAT 68 BPM</span>
+  </div>
+  <canvas id="sonar" width="920" height="580"></canvas>
+  <div class="controls">
+    <span>WASD / ARROWS: Pilot Submersible &nbsp;|&nbsp; SPACE / CLICK: Emit Active Sonar Ping (-6% Battery)</span>
+    <span>F: Silent Running (Suppress Acoustic Signature) &nbsp;|&nbsp; R: Restart Mission</span>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("sonar");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    let sub, beacons, walls, leviathan, pings, echoes, silentMode, state, flicker;
+    const keys = {};
+
+    function initGame() {
+      sub = { x: 90, y: 290, vx: 0, vy: 0, battery: 100, bpm: 68, noise: 0.1 };
+      silentMode = false;
+      state = "PLAYING";
+      flicker = 0;
+      pings = [];
+      echoes = [];
+      walls = [
+        { x: 220, y: 80, r: 44 }, { x: 250, y: 430, r: 52 },
+        { x: 450, y: 260, r: 58 }, { x: 640, y: 130, r: 48 },
+        { x: 670, y: 450, r: 50 }, { x: 800, y: 280, r: 40 }
+      ];
+      beacons = [
+        { x: 190, y: 170, done: false, prog: 0 },
+        { x: 470, y: 110, done: false, prog: 0 },
+        { x: 520, y: 470, done: false, prog: 0 },
+        { x: 830, y: 150, done: false, prog: 0 }
+      ];
+      leviathan = { x: 840, y: 490, vx: -0.4, vy: -0.3, alert: 0, targetX: 460, targetY: 290, revealed: 0 };
+      emitPing(sub.x, sub.y, 260, false);
+    }
+
+    function emitPing(x, y, maxR, loud = true) {
+      if (loud) {
+        if (sub.battery < 5) return;
+        sub.battery = Math.max(0, sub.battery - 5.5);
+        sub.noise = 1.0;
+        leviathan.targetX = x;
+        leviathan.targetY = y;
+        leviathan.alert = Math.min(1.0, leviathan.alert + 0.45);
+      }
+      pings.push({ x, y, r: 4, maxR, alpha: 1.0 });
+    }
+
+    window.addEventListener("keydown", e => {
+      keys[e.code] = true;
+      if (e.code === "Space" && state === "PLAYING") {
+        e.preventDefault();
+        emitPing(sub.x, sub.y, 440, true);
+      }
+      if (e.code === "KeyF" && state === "PLAYING") {
+        silentMode = !silentMode;
+      }
+      if (e.code === "KeyR") initGame();
+    });
+    window.addEventListener("keyup", e => { keys[e.code] = false; });
+    canvas.addEventListener("mousedown", () => {
+      if (state === "PLAYING") emitPing(sub.x, sub.y, 440, true);
+    });
+
+    let last = performance.now();
+    function update(dt) {
+      if (state !== "PLAYING") return;
+
+      const thrust = silentMode ? 55 : 115;
+      let ax = 0, ay = 0;
+      if (keys["KeyW"] || keys["ArrowUp"]) ay -= thrust;
+      if (keys["KeyS"] || keys["ArrowDown"]) ay += thrust;
+      if (keys["KeyA"] || keys["ArrowLeft"]) ax -= thrust;
+      if (keys["KeyD"] || keys["ArrowRight"]) ax += thrust;
+
+      sub.vx = (sub.vx + ax * dt) * 0.9;
+      sub.vy = (sub.vy + ay * dt) * 0.9;
+      sub.x = Math.max(24, Math.min(W - 24, sub.x + sub.vx * dt));
+      sub.y = Math.max(24, Math.min(H - 24, sub.y + sub.vy * dt));
+
+      const moving = Math.hypot(sub.vx, sub.vy) > 8;
+      if (!silentMode && moving) {
+        sub.noise = Math.min(1, sub.noise + dt * 0.25);
+        sub.battery = Math.max(0, sub.battery - dt * 1.1);
+      } else {
+        sub.noise = Math.max(0.04, sub.noise - dt * 0.35);
+        sub.battery = Math.min(100, sub.battery + dt * 1.6);
+      }
+
+      walls.forEach(w => {
+        const dx = sub.x - w.x, dy = sub.y - w.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < w.r + 12) {
+          const nx = dx / (dist || 1), ny = dy / (dist || 1);
+          sub.x = w.x + nx * (w.r + 12);
+          sub.y = w.y + ny * (w.r + 12);
+        }
+      });
+
+      beacons.forEach(b => {
+        const d = Math.hypot(sub.x - b.x, sub.y - b.y);
+        if (!b.done && d < 46) {
+          b.prog = Math.min(100, b.prog + dt * 42);
+          if (b.prog >= 100) {
+            b.done = true;
+            emitPing(b.x, b.y, 380, false);
+          }
+        }
+      });
+
+      if (beacons.every(b => b.done)) {
+        state = "ESCAPED";
+      }
+
+      // Leviathan acoustic stalking AI
+      if (sub.noise > 0.35 && !silentMode) {
+        leviathan.targetX = sub.x;
+        leviathan.targetY = sub.y;
+        leviathan.alert = Math.min(1, leviathan.alert + dt * 0.3);
+      } else {
+        leviathan.alert = Math.max(0, leviathan.alert - dt * 0.12);
+      }
+
+      const ldx = leviathan.targetX - leviathan.x;
+      const ldy = leviathan.targetY - leviathan.y;
+      const ldist = Math.hypot(ldx, ldy);
+      const lspeed = 42 + leviathan.alert * 68;
+      if (ldist > 10) {
+        leviathan.vx = (ldx / ldist) * lspeed;
+        leviathan.vy = (ldy / ldist) * lspeed;
+      }
+      leviathan.x += leviathan.vx * dt;
+      leviathan.y += leviathan.vy * dt;
+      leviathan.revealed = Math.max(0, leviathan.revealed - dt * 0.45);
+
+      const distToSub = Math.hypot(sub.x - leviathan.x, sub.y - leviathan.y);
+      sub.bpm = Math.round(64 + Math.max(0, (360 - distToSub) * 0.32));
+      if (distToSub < 140) flicker = Math.min(1, (140 - distToSub) / 140);
+      else flicker = Math.max(0, flicker - dt * 2);
+
+      if (distToSub < 24) {
+        state = "HULL_BREACH";
+      }
+
+      // Update expanding sonar rings and reveal geometry on contact
+      pings.forEach(p => {
+        const prevR = p.r;
+        p.r += dt * 270;
+        p.alpha = Math.max(0, 1 - p.r / p.maxR);
+
+        walls.forEach(w => {
+          const d = Math.hypot(w.x - p.x, w.y - p.y);
+          if (Math.abs(d - p.r) < 18 && Math.random() < 0.45) {
+            const ang = Math.atan2(p.y - w.y, p.x - w.x) + (Math.random() - 0.5) * 1.4;
+            echoes.push({ x: w.x + Math.cos(ang) * w.r, y: w.y + Math.sin(ang) * w.r, alpha: 1.0, col: "#38d9a9" });
+          }
+        });
+
+        beacons.forEach(b => {
+          const d = Math.hypot(b.x - p.x, b.y - p.y);
+          if (prevR <= d && p.r >= d) {
+            echoes.push({ x: b.x, y: b.y, alpha: 1.4, col: b.done ? "#22c55e" : "#fcc419", beacon: true });
+          }
+        });
+
+        const ld = Math.hypot(leviathan.x - p.x, leviathan.y - p.y);
+        if (prevR <= ld && p.r >= ld) {
+          leviathan.revealed = 1.3;
+          echoes.push({ x: leviathan.x, y: leviathan.y, alpha: 1.5, col: "#ff4d6d", threat: true });
+        }
+      });
+      pings = pings.filter(p => p.r < p.maxR);
+      echoes.forEach(e => e.alpha -= dt * 0.38);
+      echoes = echoes.filter(e => e.alpha > 0);
+
+      const doneCount = beacons.filter(b => b.done).length;
+      document.getElementById("beaconsTxt").textContent = `TRANSPONDERS CALIBRATED ${doneCount} / 4`;
+      document.getElementById("powerTxt").textContent = `BATTERY ${Math.round(sub.battery)}% // HEARTBEAT ${sub.bpm} BPM ${silentMode ? "[SILENT]" : ""}`;
+    }
+
+    function draw() {
+      ctx.fillStyle = "#020507";
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle sonar radar grid
+      ctx.strokeStyle = "rgba(20, 60, 50, 0.28)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+      // Active sonar rings
+      pings.forEach(p => {
+        ctx.strokeStyle = `rgba(56, 217, 169, ${p.alpha * 0.75})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Acoustic echoes
+      echoes.forEach(e => {
+        ctx.fillStyle = e.col;
+        ctx.globalAlpha = Math.min(1, e.alpha);
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.beacon || e.threat ? 6 : 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        if (e.beacon || e.threat) {
+          ctx.strokeStyle = e.col;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, 14, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+
+      // Calibration progress ring on nearby beacon
+      beacons.forEach(b => {
+        const d = Math.hypot(sub.x - b.x, sub.y - b.y);
+        if (d < 65 || b.done) {
+          ctx.strokeStyle = b.done ? "#22c55e" : "#fcc419";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 18, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * (b.prog / 100)));
+          ctx.stroke();
+        }
+      });
+
+      // Leviathan silhouette when pinged
+      if (leviathan.revealed > 0) {
+        ctx.strokeStyle = `rgba(255, 77, 109, ${Math.min(1, leviathan.revealed)})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(leviathan.x, leviathan.y, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.font = "bold 11px monospace";
+        ctx.fillStyle = `rgba(255, 77, 109, ${Math.min(1, leviathan.revealed)})`;
+        ctx.fillText("UNIDENTIFIED ACOUSTIC CONTACT", leviathan.x - 85, leviathan.y - 24);
+      }
+
+      // Player submersible
+      ctx.strokeStyle = silentMode ? "#52796f" : "#63e6be";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sub.x, sub.y, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#63e6be";
+      ctx.beginPath();
+      ctx.arc(sub.x, sub.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (flicker > 0.05) {
+        ctx.fillStyle = `rgba(255, 40, 70, ${flicker * 0.16})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      if (state === "HULL_BREACH") {
+        ctx.fillStyle = "rgba(8, 2, 4, 0.84)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#ff4d6d";
+        ctx.font = "bold 28px monospace";
+        ctx.fillText("SIGNAL LOST // HULL BREACH AT 3,840m", 165, 275);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "15px monospace";
+        ctx.fillText("Press R to deploy backup telemetry bathysphere", 265, 315);
+      } else if (state === "ESCAPED") {
+        ctx.fillStyle = "rgba(2, 12, 10, 0.84)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#38d9a9";
+        ctx.font = "bold 28px monospace";
+        ctx.fillText("ALL TRANSPONDERS ONLINE // TELEMETRY RESTORED", 95, 275);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "15px monospace";
+        ctx.fillText("Press R to run another deep-trench dive", 300, 315);
+      }
+    }
+
+    function loop(now) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    initGame();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
