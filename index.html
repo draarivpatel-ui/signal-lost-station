@@ -3,342 +3,1341 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#010608" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Signal Lost, Trench Relay 09. A blind bathysphere acoustic console with procedural sonar, a hydrophone compass, decoys and four abyssal stations to calibrate." />
   <title>Signal Lost - Trench Relay 09</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23020a0c'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%235cf2b0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%235cf2b0'/%3E%3C/svg%3E" />
   <style>
-    * { box-sizing: border-box; user-select: none; }
+    @font-face { font-family: "VT323"; src: url("fonts/VT323-Regular.woff2") format("woff2"); font-display: swap; }
+    @font-face { font-family: "Share Tech Mono"; src: url("fonts/ShareTechMono-Regular.woff2") format("woff2"); font-display: swap; }
+
+    :root {
+      --bg: #010608;
+      --housing: #04090b;
+      --panel: #061014;
+      --line: #164236;
+      --line-dim: #0c2a22;
+      --ph: #5cf2b0;
+      --ph-mid: #2fc58d;
+      --ph-deep: #0f7a5a;
+      --text: #a9f0d2;
+      --text-dim: #78b8a2;
+      --amber: #ffc24a;
+      --red: #ff6b86;
+      --cyan: #7fdcff;
+      --display: "VT323", "Share Tech Mono", ui-monospace, Menlo, Consolas, monospace;
+      --body: "Share Tech Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; scrollbar-color: var(--ph-deep) var(--bg); }
     body {
       margin: 0;
-      background: #030608;
-      color: #8ce99a;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       min-height: 100vh;
+      min-height: 100dvh;
+      padding: 18px;
+      background:
+        radial-gradient(120% 90% at 50% 0%, #07161a 0%, var(--bg) 62%),
+        var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
     }
-    .hud-bar {
-      width: 920px;
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 16px;
-      background: #071014;
-      border: 1px solid #16302a;
-      border-bottom: none;
-      font-size: 13px;
+    ::selection { background: var(--ph); color: #001a12; }
+
+    h1, h2 { margin: 0; font-family: var(--display); font-weight: 400; color: var(--ph); }
+    h1 { font-size: 40px; line-height: 1; letter-spacing: 0.02em; }
+    h2 { font-size: 24px; line-height: 1.05; letter-spacing: 0.03em; text-wrap: balance; }
+    .glow { text-shadow: 0.6px 0 rgba(255, 90, 120, 0.35), -0.6px 0 rgba(90, 220, 255, 0.35), 0 0 8px rgba(92, 242, 176, 0.45); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    .rig {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #071317 0%, var(--housing) 100%);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(120, 255, 200, 0.06);
+    }
+
+    .rig-top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .rig-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-right: auto; }
+    .rig-title .sub { font-family: var(--display); font-size: 24px; color: var(--text-dim); }
+    .rig-meta { display: flex; gap: 22px; margin: 0; }
+    .rig-meta div { display: flex; align-items: baseline; gap: 8px; }
+    .rig-meta dt { color: var(--text-dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .rig-meta dd { margin: 0; font-family: var(--display); font-size: 28px; line-height: 1; color: var(--ph); font-variant-numeric: tabular-nums; }
+
+    .btn {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(92, 242, 176, 0.04);
+      color: var(--text);
+      font: inherit;
       letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background-color 0.18s var(--ease-out), border-color 0.18s var(--ease-out), color 0.18s var(--ease-out), transform 0.12s var(--ease-out);
     }
-    canvas {
-      border: 1px solid #16302a;
-      background: #020507;
-      box-shadow: 0 0 60px rgba(16, 185, 129, 0.09);
-      cursor: crosshair;
+    .btn:hover { background: rgba(92, 242, 176, 0.12); border-color: var(--ph-mid); }
+    .btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .btn:active { transform: translateY(1px); background: rgba(92, 242, 176, 0.2); }
+    .btn[aria-pressed="true"] { border-color: var(--ph); background: rgba(92, 242, 176, 0.16); color: var(--ph); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn kbd { font-family: var(--display); font-size: 18px; line-height: 1; padding: 2px 7px 3px; border: 1px solid currentColor; border-radius: 4px; color: var(--ph); }
+    .btn.primary { border-color: var(--ph); color: var(--ph); background: rgba(92, 242, 176, 0.12); font-size: 16px; padding: 10px 22px; }
+    #muteBtn .state { color: var(--ph); }
+    #muteBtn[aria-pressed="true"] .state { color: var(--amber); }
+
+    .deck { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+    .stage { display: grid; gap: 12px; min-width: 0; }
+
+    .crt { position: relative; isolation: isolate; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+    .crt::before {
+      content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.24) 3px);
     }
-    .controls {
-      width: 920px;
-      padding: 10px 16px;
-      background: #071014;
-      border: 1px solid #16302a;
-      border-top: none;
-      font-size: 12px;
-      color: #52796f;
-      display: flex;
-      justify-content: space-between;
+    .crt::after {
+      content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(120% 120% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%),
+        linear-gradient(180deg, rgba(150, 255, 220, 0.045), rgba(150, 255, 220, 0) 22%);
+      animation: crt-flicker 7s steps(1, end) infinite;
+    }
+    .roll { position: absolute; left: 0; right: 0; top: 0; height: 16%; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(120, 255, 200, 0), rgba(120, 255, 200, 0.05), rgba(120, 255, 200, 0)); animation: roll 9s linear infinite; }
+    @keyframes roll { from { transform: translateY(-120%); } to { transform: translateY(700%); } }
+    @keyframes crt-flicker { 0%, 100% { opacity: 1; } 46% { opacity: 0.97; } 49% { opacity: 0.93; } 51% { opacity: 0.985; } }
+
+    .scope { aspect-ratio: 920 / 580; cursor: crosshair; touch-action: manipulation; }
+    .scope canvas { display: block; width: 100%; height: 100%; }
+    .overlay {
+      position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: 20px; text-align: center;
+      background: rgba(1, 6, 8, 0.8);
+    }
+    .overlay[hidden] { display: none; }
+    .overlay-card { display: grid; gap: 14px; justify-items: center; max-width: 520px; }
+    .overlay h2 { font-size: 46px; }
+    .overlay p { margin: 0; color: var(--text); max-width: 46ch; text-wrap: pretty; }
+    .overlay .stats { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 0; }
+    .overlay .stats[hidden] { display: none; }
+    .overlay .stats div { display: grid; gap: 2px; }
+    .overlay .stats dt { color: var(--text-dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .overlay .stats dd { margin: 0; font-family: var(--display); font-size: 30px; line-height: 1; color: var(--ph); font-variant-numeric: tabular-nums; }
+    .overlay.is-breach h2 { color: var(--red); }
+    .overlay.is-breach .stats dd { color: var(--red); }
+    .overlay .hint { color: var(--text-dim); font-size: 13px; }
+
+    .log { list-style: none; margin: 0; padding: 10px 14px; min-height: 142px; border: 1px solid var(--line-dim); border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+    .log li { display: flex; gap: 12px; opacity: 1; transition: opacity 0.4s var(--ease-out); }
+    .log li time { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+    .log li:nth-child(2) { opacity: 0.8; }
+    .log li:nth-child(3) { opacity: 0.62; }
+    .log li:nth-child(4) { opacity: 0.46; }
+    .log li:nth-child(5) { opacity: 0.34; }
+    .log li:nth-child(n+6) { opacity: 0.24; }
+    .log li.warn { color: var(--amber); }
+    .log li.threat { color: var(--red); }
+    .log li.good { color: var(--ph); }
+    .log li.own { color: var(--cyan); }
+
+    .side { display: grid; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0; }
+    .mod { padding: 14px 16px 16px; display: grid; gap: 10px; }
+    .mod + .mod { border-top: 1px solid var(--line-dim); }
+    .mod-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .mod-head .count { font-family: var(--display); font-size: 22px; color: var(--amber); font-variant-numeric: tabular-nums; }
+
+    .compass-wrap { width: min(100%, 250px); aspect-ratio: 1; justify-self: center; border-radius: 50%; }
+    .compass-wrap canvas { display: block; width: 100%; height: 100%; }
+    .readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; text-align: center; }
+    .readout dt { color: var(--text-dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .readout dd { margin: 0; font-family: var(--display); font-size: 30px; line-height: 1; color: var(--ph); font-variant-numeric: tabular-nums; }
+    .readout dd.threat { color: var(--red); }
+    .readout dd.quiet { color: var(--text-dim); }
+    .compass-note { margin: 0; color: var(--text-dim); font-size: 13px; text-wrap: pretty; }
+
+    .stations { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    .st { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
+    .st-name { color: var(--text); letter-spacing: 0.04em; }
+    .st-name small { color: var(--text-dim); font-size: 12px; margin-left: 8px; }
+    .st-state { color: var(--text-dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; text-align: right; }
+    .st-bar { grid-column: 1 / -1; height: 6px; background: #0a1c18; border: 1px solid var(--line-dim); border-radius: 3px; overflow: hidden; }
+    .st-bar i { display: block; height: 100%; width: 0; background: var(--amber); }
+    .st.located .st-state { color: var(--amber); }
+    .st.calibrating .st-state { color: var(--amber); }
+    .st.drifting .st-state { color: var(--red); }
+    .st.online .st-state { color: var(--ph); }
+    .st.online .st-bar i { background: var(--ph); box-shadow: 0 0 6px rgba(92, 242, 176, 0.7); }
+    .st.online .st-name { color: var(--ph); }
+
+    .sys { display: grid; gap: 10px; margin: 0; }
+    .sys-row { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; }
+    .sys-row dt { color: var(--text-dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .sys-row dd { margin: 0; font-family: var(--display); font-size: 22px; line-height: 1; color: var(--ph); font-variant-numeric: tabular-nums; min-width: 3.4ch; text-align: right; }
+    .meter { height: 8px; background: #0a1c18; border: 1px solid var(--line-dim); border-radius: 4px; overflow: hidden; }
+    .meter i { display: block; height: 100%; width: 0; background: var(--ph); }
+    .meter.sig i { background: var(--amber); }
+    .meter.low i { background: var(--red); }
+    .pips { display: flex; gap: 6px; }
+    .pip { width: 14px; height: 14px; border: 1px solid var(--cyan); border-radius: 2px; background: transparent; }
+    .pip.on { background: var(--cyan); box-shadow: 0 0 6px rgba(127, 220, 255, 0.6); }
+    .mode { color: var(--ph); }
+    .mode.silent { color: var(--cyan); }
+
+    .spectro-wrap { display: grid; gap: 8px; }
+    .spectro-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .spectro-head p { margin: 0; color: var(--text-dim); font-size: 13px; }
+    .spectro { background: #010506; }
+    .spectro canvas { display: block; width: 100%; height: auto; aspect-ratio: 920 / 128; }
+    .spectro .axis { position: absolute; left: 8px; z-index: 3; pointer-events: none; font-size: 12px; color: var(--text); transform: translateY(-50%); text-shadow: 0 0 3px #000, 0 0 3px #000; }
+    .spectro .axis::after { content: ""; display: inline-block; width: 14px; height: 1px; margin-left: 6px; vertical-align: middle; background: rgba(169, 240, 210, 0.5); }
+    .spectro .idle { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; padding: 12px; color: var(--text-dim); background: rgba(1, 5, 6, 0.72); }
+    .spectro .idle[hidden] { display: none; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .controls .steer { color: var(--text-dim); margin-right: auto; }
+    .controls .steer kbd { font-family: var(--display); font-size: 18px; color: var(--ph); }
+    .dpad { display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px); gap: 6px; }
+    .dpad .btn { justify-content: center; padding: 0; min-height: 56px; font-family: var(--display); font-size: 22px; touch-action: none; }
+    .dpad .up { grid-column: 2; grid-row: 1; }
+    .dpad .left { grid-column: 1; grid-row: 2; }
+    .dpad .down { grid-column: 2; grid-row: 2; }
+    .dpad .right { grid-column: 3; grid-row: 2; }
+    @media (pointer: coarse) {
+      .dpad { display: grid; }
+      .btn { min-height: 48px; }
+    }
+
+    @media (max-width: 960px) {
+      body { padding: 10px; }
+      .rig { padding: 10px; }
+      .deck { grid-template-columns: 1fr; }
+      .rig-meta { gap: 14px; }
+      h1 { font-size: 34px; }
+    }
+    @media (max-width: 520px) {
+      .overlay h2 { font-size: 34px; }
+      .overlay { padding: 10px; }
+      .overlay-card { gap: 8px; }
+      .sys-row { grid-template-columns: 80px 1fr auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .crt::after, .roll { animation: none; }
+      .roll { display: none; }
+      .btn, .log li { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div class="hud-bar">
-    <span id="statusTxt">TRENCH RELAY 09 // DEPTH 3,840m</span>
-    <span id="beaconsTxt">TRANSPONDERS CALIBRATED 0 / 4</span>
-    <span id="powerTxt">BATTERY 100% // HEARTBEAT 68 BPM</span>
-  </div>
-  <canvas id="sonar" width="920" height="580"></canvas>
-  <div class="controls">
-    <span>WASD / ARROWS: Pilot Submersible &nbsp;|&nbsp; SPACE / CLICK: Emit Active Sonar Ping (-6% Battery)</span>
-    <span>F: Silent Running (Suppress Acoustic Signature) &nbsp;|&nbsp; R: Restart Mission</span>
+  <noscript>This console needs JavaScript to run the sonar simulation.</noscript>
+  <div class="rig">
+    <header class="rig-top">
+      <div class="rig-title">
+        <h1 class="glow">Signal Lost</h1>
+        <span class="sub">Trench Relay 09</span>
+      </div>
+      <dl class="rig-meta">
+        <div><dt>Depth</dt><dd>3,840 m</dd></div>
+        <div><dt>Dive clock</dt><dd id="clockTxt">00:00</dd></div>
+      </dl>
+      <button class="btn" id="muteBtn" type="button" aria-pressed="false" aria-label="Sound, toggle mute (M)">
+        <kbd>M</kbd><span>Sound <span class="state" id="muteState">on</span></span>
+      </button>
+    </header>
+
+    <div class="deck">
+      <div class="stage">
+        <section class="crt scope" id="scope" aria-label="Sonar scope">
+          <canvas id="sonar" role="img" aria-label="Sonar scope. The trench is dark until a ping lights it. Your bathysphere, echoes, stations, decoys and the unidentified contact appear as phosphor points."></canvas>
+          <div class="roll"></div>
+          <div class="overlay" id="overlay" role="group" aria-labelledby="overlayTitle">
+            <div class="overlay-card">
+              <h2 id="overlayTitle" class="glow">Signal lost</h2>
+              <p id="overlayBody">The relay went dark at 3,840 m. Calibrate four abyssal stations to bring telemetry back. Every ping shows you the trench and shows the trench where you are.</p>
+              <dl class="stats" id="overlayStats" hidden>
+                <div><dt>Dive time</dt><dd id="stTime">00:00</dd></div>
+                <div><dt>Pings</dt><dd id="stPings">0</dd></div>
+                <div><dt>Decoys</dt><dd id="stDecoys">0</dd></div>
+                <div><dt>Stations</dt><dd id="stStations">0 / 4</dd></div>
+              </dl>
+              <button class="btn primary" id="startBtn" type="button">Begin dive</button>
+              <span class="hint" id="overlayHint">Press any key. Sound starts on the first key press, M mutes it.</span>
+            </div>
+          </div>
+        </section>
+        <ol class="log" id="log" aria-label="Event log"></ol>
+      </div>
+
+      <aside class="side" aria-label="Instruments">
+        <section class="mod" aria-labelledby="hCompass">
+          <div class="mod-head"><h2 id="hCompass">Hydrophone bearing</h2></div>
+          <div class="crt compass-wrap"><canvas id="compass" role="img" aria-label="Directional hydrophone compass. Shows the bearing to the unidentified contact, with a wedge for uncertainty."></canvas></div>
+          <dl class="readout">
+            <div><dt>Bearing</dt><dd id="brgTxt">---</dd></div>
+            <div><dt>Range</dt><dd id="rngTxt">---</dd></div>
+            <div><dt>Signal</dt><dd id="sigTxt">0%</dd></div>
+          </dl>
+          <p class="compass-note" id="compassNote">Your own noise masks the array. Run silent to hear the contact clearly.</p>
+        </section>
+
+        <section class="mod" aria-labelledby="hStations">
+          <div class="mod-head"><h2 id="hStations">Abyssal stations</h2><span class="count" id="stCount">0 / 4</span></div>
+          <ol class="stations" id="stationList"></ol>
+        </section>
+
+        <section class="mod" aria-labelledby="hSys">
+          <div class="mod-head"><h2 id="hSys">Systems</h2><span class="mode" id="modeTxt">Running</span></div>
+          <dl class="sys">
+            <div class="sys-row"><dt>Battery</dt><dd class="meter" id="batMeter" role="meter" aria-label="Battery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i></i></dd><dd id="batTxt">100%</dd></div>
+            <div class="sys-row"><dt>Signature</dt><dd class="meter sig" id="sigMeter" role="meter" aria-label="Acoustic signature" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></dd><dd id="sigPct">0%</dd></div>
+            <div class="sys-row"><dt>Heartbeat</dt><dd></dd><dd id="bpmTxt">66</dd></div>
+            <div class="sys-row"><dt>Decoys</dt><dd class="pips" id="pips" aria-label="Decoys remaining"></dd><dd id="decoyTxt">3</dd></div>
+          </dl>
+        </section>
+      </aside>
+    </div>
+
+    <section class="spectro-wrap" aria-labelledby="hSpec">
+      <div class="spectro-head">
+        <h2 id="hSpec">Hydrophone spectrogram</h2>
+        <p>30 Hz to 4 kHz, newest on the right, last 20 seconds. It keeps listening while muted.</p>
+      </div>
+      <div class="crt spectro" id="spectro">
+        <canvas id="spec" width="920" height="128" role="img" aria-label="Live frequency spectrogram of the hydrophone feed."></canvas>
+        <div class="idle" id="specIdle">Hydrophone array standing by. Press any key to open the audio link.</div>
+      </div>
+    </section>
+
+    <footer class="controls">
+      <span class="steer"><kbd>W A S D</kbd> or <kbd>Arrows</kbd> steer the bathysphere</span>
+      <div class="dpad" aria-label="Steering pad">
+        <button class="btn up" type="button" data-key="KeyW" aria-label="Thrust up">Up</button>
+        <button class="btn left" type="button" data-key="KeyA" aria-label="Thrust left">Lt</button>
+        <button class="btn down" type="button" data-key="KeyS" aria-label="Thrust down">Dn</button>
+        <button class="btn right" type="button" data-key="KeyD" aria-label="Thrust right">Rt</button>
+      </div>
+      <button class="btn" id="pingBtn" type="button"><kbd>Space</kbd><span>Ping</span></button>
+      <button class="btn" id="silentBtn" type="button" aria-pressed="false"><kbd>F</kbd><span>Silent running</span></button>
+      <button class="btn" id="decoyBtn" type="button"><kbd>G</kbd><span>Decoy <span id="decoyBtnCount">x3</span></span></button>
+      <button class="btn" id="restartBtn" type="button"><kbd>R</kbd><span>Restart</span></button>
+    </footer>
+    <div class="sr-only" id="announce" role="status" aria-live="polite"></div>
   </div>
 
   <script>
-    const canvas = document.getElementById("sonar");
-    const ctx = canvas.getContext("2d");
-    const W = canvas.width, H = canvas.height;
+    "use strict";
 
-    let sub, beacons, walls, leviathan, pings, echoes, silentMode, state, flicker;
+    /* ------------------------------------------------------------------
+       Signal Lost, Trench Relay 09
+       Layout of this file: constants and helpers, Sound (procedural Web
+       Audio), Game (simulation, fixed to real seconds), View (CRT scope,
+       compass, spectrogram), HUD and Log, input, main loop.
+       ------------------------------------------------------------------ */
+
+    const W = 920, H = 580, TAU = Math.PI * 2;
+    const SUB_R = 12, LEV_R = 26, STATION_RANGE = 46, HEAR_RANGE = 560;
+    const TUNE = {
+      thrust: 430, thrustSilent: 195, drag: 3.5,
+      pingCost: 5.5, pingSpeed: 270, pingRange: 440,
+      decoyLife: 14, decoyCooldown: 2.5, decoyCost: 4, decoyStock: 3, decoyLevel: 1.5,
+      levBase: 26, levAlert: 56, levHear: 0.2, levFalloff: 170, levProximity: 90,
+      calibRate: 25, calibDecay: 7, calibMaxSpeed: 32
+    };
+    const WALL_DEFS = [
+      { x: 220, y: 80, r: 44 }, { x: 250, y: 430, r: 52 }, { x: 450, y: 260, r: 58 },
+      { x: 640, y: 130, r: 48 }, { x: 670, y: 450, r: 50 }, { x: 800, y: 280, r: 40 }
+    ];
+    const STATION_DEFS = [
+      { x: 190, y: 170, name: "Anchor", freq: 330 },
+      { x: 470, y: 110, name: "Spire", freq: 392 },
+      { x: 520, y: 470, name: "Basin", freq: 494 },
+      { x: 830, y: 150, name: "Ridge", freq: 587 }
+    ];
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const $ = id => document.getElementById(id);
+    const fmtTime = s => { s = Math.floor(s); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+    const bearingOf = (dx, dy) => (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+    const angDelta = (a, b) => ((b - a + 540) % 360) - 180;
+
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    const seedParam = new URLSearchParams(location.search).get("seed");
+    let rng = mulberry32(seedParam !== null ? Number(seedParam) | 0 : (Math.random() * 4294967296) | 0);
+    const rand = () => rng();
+
+    /* ------------------------------------------------------------------
+       Sound. Everything is synthesized at run time, there are no audio
+       files. The analyser taps the signal before the mute gain, so the
+       spectrogram keeps listening while the speakers are muted.
+       ------------------------------------------------------------------ */
+    const Sound = {
+      ctx: null, master: null, bus: null, analyser: null, muted: false,
+      heartTimer: 0, nodes: {},
+
+      unlock() {
+        if (this.ctx) { if (this.ctx.state === "suspended") this.ctx.resume(); return; }
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        try { this.ctx = new AC({ latencyHint: "interactive" }); } catch (e) { return; }
+        this.build();
+        this.ctx.resume();
+        document.getElementById("specIdle").hidden = true;
+        Spectro.init();
+      },
+
+      build() {
+        const c = this.ctx, n = this.nodes;
+        const comp = c.createDynamicsCompressor();
+        comp.threshold.value = -16; comp.knee.value = 22; comp.ratio.value = 5; comp.attack.value = 0.005; comp.release.value = 0.25;
+        this.bus = c.createGain();
+        this.master = c.createGain();
+        this.master.gain.value = this.muted ? 0 : 0.85;
+        this.analyser = c.createAnalyser();
+        this.analyser.fftSize = 4096;
+        this.analyser.smoothingTimeConstant = 0.55;
+        this.analyser.minDecibels = -96;
+        this.analyser.maxDecibels = -28;
+        const sink = c.createGain(); sink.gain.value = 0;
+        this.bus.connect(comp);
+        comp.connect(this.master); this.master.connect(c.destination);
+        comp.connect(this.analyser); this.analyser.connect(sink); sink.connect(c.destination);
+
+        const brown = c.createBuffer(1, c.sampleRate * 6, c.sampleRate);
+        { const d = brown.getChannelData(0); let last = 0; for (let i = 0; i < d.length; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; } }
+        const white = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+        { const d = white.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+        n.brown = brown; n.white = white;
+        const loop = (buf) => { const s = c.createBufferSource(); s.buffer = buf; s.loop = true; return s; };
+        const pan = (v = 0) => { if (!c.createStereoPanner) return null; const p = c.createStereoPanner(); p.pan.value = v; return p; };
+        this.pan = pan;
+
+        // echo send used by pings and chimes
+        const dly = c.createDelay(1.0); dly.delayTime.value = 0.29;
+        const fb = c.createGain(); fb.gain.value = 0.36;
+        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1500;
+        n.send = c.createGain(); n.send.gain.value = 0.5;
+        n.send.connect(dly); dly.connect(lp); lp.connect(fb); fb.connect(dly); lp.connect(this.bus);
+
+        // hull drone and abyss hiss, always present so the spectrogram has a floor
+        const d1 = c.createOscillator(); d1.frequency.value = 43;
+        const d2 = c.createOscillator(); d2.frequency.value = 64.6;
+        const dg = c.createGain(); dg.gain.value = 0.05;
+        const lfo = c.createOscillator(); lfo.frequency.value = 0.07;
+        const lfoG = c.createGain(); lfoG.gain.value = 0.02;
+        lfo.connect(lfoG); lfoG.connect(dg.gain);
+        d1.connect(dg); d2.connect(dg); dg.connect(this.bus);
+        d1.start(); d2.start(); lfo.start();
+        const hiss = loop(white), hf = c.createBiquadFilter(); hf.type = "bandpass"; hf.frequency.value = 2400; hf.Q.value = 0.7;
+        const hg = c.createGain(); hg.gain.value = 0.005;
+        hiss.connect(hf); hf.connect(hg); hg.connect(this.bus); hiss.start();
+
+        // hydrophone rumble: filtered brown noise plus a slow growl, panned by contact bearing
+        const rs = loop(brown), rlp = c.createBiquadFilter(); rlp.type = "lowpass"; rlp.frequency.value = 90; rlp.Q.value = 0.8;
+        const rg = c.createGain(); rg.gain.value = 0.02;
+        const go = c.createOscillator(); go.type = "sawtooth"; go.frequency.value = 37;
+        const glp = c.createBiquadFilter(); glp.type = "lowpass"; glp.frequency.value = 85;
+        const gg = c.createGain(); gg.gain.value = 0.0;
+        const gl = c.createOscillator(); gl.frequency.value = 0.4;
+        const glg = c.createGain(); glg.gain.value = 0.0;
+        gl.connect(glg); glg.connect(gg.gain);
+        const rp = pan(0);
+        rs.connect(rlp); rlp.connect(rg); go.connect(glp); glp.connect(gg);
+        if (rp) { rg.connect(rp); gg.connect(rp); rp.connect(this.bus); } else { rg.connect(this.bus); gg.connect(this.bus); }
+        rs.start(); go.start(); gl.start();
+        n.rumble = { gain: rg, lp: rlp, pan: rp, growl: gg, growlLfo: gl, growlDepth: glg };
+
+        // own thrusters
+        const to = c.createOscillator(); to.type = "triangle"; to.frequency.value = 100;
+        const ts = loop(brown), tbp = c.createBiquadFilter(); tbp.type = "bandpass"; tbp.frequency.value = 240; tbp.Q.value = 1.1;
+        const tlp = c.createBiquadFilter(); tlp.type = "lowpass"; tlp.frequency.value = 420;
+        const tg = c.createGain(); tg.gain.value = 0;
+        to.connect(tlp); ts.connect(tbp); tbp.connect(tlp); tlp.connect(tg); tg.connect(this.bus);
+        to.start(); ts.start();
+        n.thr = { gain: tg, osc: to };
+
+        // station calibration voice (two detuned sines)
+        const so1 = c.createOscillator(), so2 = c.createOscillator(), sg = c.createGain(); sg.gain.value = 0;
+        so1.frequency.value = 330; so2.frequency.value = 331.5;
+        so1.connect(sg); so2.connect(sg); sg.connect(this.bus); sg.connect(n.send);
+        so1.start(); so2.start();
+        n.voice = { gain: sg, a: so1, b: so2 };
+      },
+
+      setMuted(m) {
+        this.muted = m;
+        if (this.ctx) this.master.gain.setTargetAtTime(m ? 0 : 0.85, this.ctx.currentTime, 0.03);
+      },
+
+      ok() { return this.ctx && this.ctx.state === "running"; },
+      panFor(x) { return clamp((x - Game.sub.x) / 380, -1, 1) * 0.9; },
+      route(node, x, sendAmt = 0) {
+        const p = this.pan ? this.pan(x === undefined ? 0 : this.panFor(x)) : null;
+        if (p) { node.connect(p); p.connect(this.bus); if (sendAmt) { const s = this.ctx.createGain(); s.gain.value = sendAmt; p.connect(s); s.connect(this.nodes.send); } }
+        else { node.connect(this.bus); }
+      },
+      tone(freq, t0, dur, gain, type, x, sendAmt, endFreq) {
+        const c = this.ctx, o = c.createOscillator(), g = c.createGain();
+        o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+        if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(gain, t0 + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); this.route(g, x, sendAmt);
+        o.start(t0); o.stop(t0 + dur + 0.05);
+      },
+      burst(t0, dur, gain, freq, q, x) {
+        const c = this.ctx, s = c.createBufferSource(); s.buffer = this.nodes.white;
+        const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
+        const g = c.createGain(); g.gain.setValueAtTime(gain, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        s.connect(f); f.connect(g); this.route(g, x);
+        s.start(t0, Math.random() * 1.5, dur + 0.05);
+      },
+
+      ping(quiet) {
+        if (!this.ok()) return;
+        const t = this.ctx.currentTime, k = quiet ? 0.5 : 1;
+        this.tone(1500, t, 1.7, 0.5 * k, "sine", undefined, 0.5, 1240);
+        this.tone(3000, t, 0.55, 0.1 * k, "sine", undefined, 0.3, 2480);
+        this.tone(95, t, 0.18, 0.4 * k, "sine", undefined, 0, 55);
+      },
+      echo(x, kind, amt) {
+        if (!this.ok()) return;
+        const t = this.ctx.currentTime;
+        if (kind === "wall") this.tone(740, t, 0.09, 0.07 * amt, "sine", x, 0.2);
+        else if (kind === "station") { this.tone(988, t, 0.22, 0.1, "sine", x, 0.4); this.tone(1318, t + 0.09, 0.3, 0.08, "sine", x, 0.4); }
+        else if (kind === "threat") this.tone(170, t, 0.55, 0.3, "sawtooth", x, 0.2, 80);
+      },
+      decoyDrop(x) { if (this.ok()) this.tone(1300, this.ctx.currentTime, 0.28, 0.14, "triangle", x, 0.3, 320); },
+      decoyPulse(x) { if (!this.ok()) return; const t = this.ctx.currentTime; this.burst(t, 0.05, 0.12, 1800, 4, x); this.tone(880, t, 0.1, 0.05, "sine", x, 0.2); },
+      decoyGone(x) { if (this.ok()) { const t = this.ctx.currentTime; this.burst(t, 0.4, 0.3, 500, 0.8, x); this.tone(140, t, 0.4, 0.2, "sawtooth", x, 0, 50); } },
+      stationOnline(i) {
+        if (!this.ok()) return;
+        const t = this.ctx.currentTime, f = STATION_DEFS[i].freq;
+        [1, 1.5, 2].forEach((m, k) => this.tone(f * m, t + k * 0.12, 0.7, 0.13, "sine", undefined, 0.5));
+      },
+      denied() { if (this.ok()) this.tone(180, this.ctx.currentTime, 0.1, 0.07, "square"); },
+      valve() { if (this.ok()) this.burst(this.ctx.currentTime, 0.1, 0.1, 500, 1.5); },
+      heart(level) {
+        if (!this.ok()) return;
+        const t = this.ctx.currentTime;
+        this.tone(54, t, 0.12, 0.34 * level, "sine", undefined, 0, 40);
+        this.tone(48, t + 0.17, 0.12, 0.22 * level, "sine", undefined, 0, 36);
+      },
+      breach() {
+        if (!this.ok()) return;
+        const t = this.ctx.currentTime, c = this.ctx;
+        const s = c.createBufferSource(); s.buffer = this.nodes.brown;
+        const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(60, t + 1.8);
+        const g = c.createGain(); g.gain.setValueAtTime(1.4, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.0);
+        s.connect(f); f.connect(g); g.connect(this.bus); s.start(t, 0, 2.1);
+        this.tone(38, t, 2.4, 0.5, "sine", undefined, 0, 26);
+      },
+      escape() {
+        if (!this.ok()) return;
+        const c = this.ctx, t = c.currentTime;
+        [220, 277.2, 329.6, 440].forEach((f, k) => {
+          const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, t + k * 0.1); g.gain.linearRampToValueAtTime(0.1, t + 0.8 + k * 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.4);
+          o.connect(g); g.connect(this.bus); g.connect(this.nodes.send); o.start(t + k * 0.1); o.stop(t + 3.5);
+        });
+      },
+
+      update(dt) {
+        if (!this.ctx) return;
+        const g = Game, c = this.ctx, t = c.currentTime, n = this.nodes;
+        if (c.state !== "running") return;
+        const playing = g.state === "PLAYING";
+        const d = Math.hypot(g.lev.x - g.sub.x, g.lev.y - g.sub.y);
+        const q = playing ? clamp(1 - d / 620, 0, 1) : 0;
+        n.rumble.gain.gain.setTargetAtTime(playing ? 0.04 + 0.55 * q * q : 0.015, t, 0.12);
+        n.rumble.lp.frequency.setTargetAtTime(70 + 170 * q + 40 * g.lev.alert, t, 0.2);
+        n.rumble.growl.gain.setTargetAtTime(playing ? 0.05 + 0.2 * q : 0, t, 0.3);
+        n.rumble.growlLfo.frequency.setTargetAtTime(0.35 + 1.4 * g.lev.alert, t, 0.3);
+        n.rumble.growlDepth.gain.setTargetAtTime(0.04 * q, t, 0.3);
+        if (n.rumble.pan) n.rumble.pan.pan.setTargetAtTime(clamp((g.lev.x - g.sub.x) / 320, -1, 1), t, 0.1);
+        const sp = g.sub.speed;
+        n.thr.gain.gain.setTargetAtTime(playing ? clamp(sp / 110, 0, 1) * (g.sub.silent ? 0.22 : 1) * 0.16 : 0, t, 0.08);
+        n.thr.osc.frequency.setTargetAtTime(88 + sp * 0.7, t, 0.1);
+        const cal = playing ? g.stations.find(s => !s.done && s.state === "calibrating") : null;
+        if (cal) {
+          const def = STATION_DEFS[g.stations.indexOf(cal)];
+          n.voice.a.frequency.setTargetAtTime(def.freq, t, 0.05);
+          n.voice.b.frequency.setTargetAtTime(def.freq * (1.003 + cal.prog / 4000), t, 0.05);
+          n.voice.gain.gain.setTargetAtTime(0.03 + 0.1 * (cal.prog / 100), t, 0.06);
+        } else n.voice.gain.gain.setTargetAtTime(0, t, 0.08);
+        if (playing && g.sub.bpm > 82) {
+          this.heartTimer -= dt;
+          if (this.heartTimer <= 0) { this.heart(clamp((g.sub.bpm - 80) / 90, 0.2, 1)); this.heartTimer = 60 / g.sub.bpm; }
+        }
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       Log and announcements
+       ------------------------------------------------------------------ */
+    const Log = {
+      el: null,
+      add(text, cls, announce) {
+        const li = document.createElement("li");
+        if (cls) li.className = cls;
+        const tm = document.createElement("time"); tm.textContent = fmtTime(Game.t);
+        const sp = document.createElement("span"); sp.textContent = text;
+        li.append(tm, sp);
+        this.el.prepend(li);
+        while (this.el.children.length > 7) this.el.lastChild.remove();
+        if (announce) $("announce").textContent = text;
+      },
+      clear() { this.el.textContent = ""; }
+    };
+
+    /* ------------------------------------------------------------------
+       Game. All motion is in pixels per real second, so it plays the
+       same at 30, 60 or 144 frames per second.
+       ------------------------------------------------------------------ */
     const keys = {};
+    const Game = {
+      state: "STANDBY", t: 0,
+      sub: null, lev: null, stations: [], points: [], pings: [], decoys: [], bursts: [],
+      decoyStock: 3, decoyCool: 0, pingCool: 0, flicker: 0, stats: { pings: 0, decoys: 0 },
+      warned: false, lowBat: false,
 
-    function initGame() {
-      sub = { x: 90, y: 290, vx: 0, vy: 0, battery: 100, bpm: 68, noise: 0.1 };
-      silentMode = false;
-      state = "PLAYING";
-      flicker = 0;
-      pings = [];
-      echoes = [];
-      walls = [
-        { x: 220, y: 80, r: 44 }, { x: 250, y: 430, r: 52 },
-        { x: 450, y: 260, r: 58 }, { x: 640, y: 130, r: 48 },
-        { x: 670, y: 450, r: 50 }, { x: 800, y: 280, r: 40 }
-      ];
-      beacons = [
-        { x: 190, y: 170, done: false, prog: 0 },
-        { x: 470, y: 110, done: false, prog: 0 },
-        { x: 520, y: 470, done: false, prog: 0 },
-        { x: 830, y: 150, done: false, prog: 0 }
-      ];
-      leviathan = { x: 840, y: 490, vx: -0.4, vy: -0.3, alert: 0, targetX: 460, targetY: 290, revealed: 0 };
-      emitPing(sub.x, sub.y, 260, false);
-    }
+      reset() {
+        this.t = 0;
+        this.sub = { x: 90, y: 290, vx: 0, vy: 0, battery: 100, noise: 0.1, ping: 0, bpm: 66, silent: false, speed: 0 };
+        this.lev = { x: 840, y: 490, vx: 0, vy: 0, alert: 0, tx: 460, ty: 290, mode: "patrol", lock: 0, timer: 0, hit: -99, side: rand() < 0.5 ? 1 : -1 };
+        this.stations = STATION_DEFS.map(d => ({ x: d.x, y: d.y, prog: 0, done: false, located: false, state: "unlocated", hit: -99 }));
+        this.pings = []; this.decoys = []; this.bursts = [];
+        this.decoyStock = TUNE.decoyStock; this.decoyCool = 0; this.pingCool = 0; this.flicker = 0;
+        this.stats = { pings: 0, decoys: 0 };
+        this.warned = false; this.lowBat = false;
+        this.points = [];
+        WALL_DEFS.forEach((w, wi) => {
+          const n = Math.round(TAU * w.r / 5);
+          for (let i = 0; i < n; i++) { const a = i / n * TAU; this.points.push({ x: w.x + Math.cos(a) * w.r, y: w.y + Math.sin(a) * w.r, nx: Math.cos(a), ny: Math.sin(a), wall: wi, hit: -99, gain: 0, kind: "wall" }); }
+        });
+        const m = 8, step = 14;
+        for (let x = m; x <= W - m; x += step) { this.points.push({ x, y: m, nx: 0, ny: 1, hit: -99, gain: 0, kind: "rim" }); this.points.push({ x, y: H - m, nx: 0, ny: -1, hit: -99, gain: 0, kind: "rim" }); }
+        for (let y = m + step; y < H - m; y += step) { this.points.push({ x: m, y, nx: 1, ny: 0, hit: -99, gain: 0, kind: "rim" }); this.points.push({ x: W - m, y, nx: -1, ny: 0, hit: -99, gain: 0, kind: "rim" }); }
+        Hydro.reset();
+      },
 
-    function emitPing(x, y, maxR, loud = true) {
-      if (loud) {
-        if (sub.battery < 5) return;
-        sub.battery = Math.max(0, sub.battery - 5.5);
-        sub.noise = 1.0;
-        leviathan.targetX = x;
-        leviathan.targetY = y;
-        leviathan.alert = Math.min(1.0, leviathan.alert + 0.45);
+      start() {
+        this.reset();
+        View.trail = [];
+        this.state = "PLAYING";
+        Log.clear();
+        Log.add("Dive started. Relay 09 is dark. Four stations to calibrate.", "good", true);
+        this.addPing(this.sub.x, this.sub.y, 260, "sonar");
+        Sound.ping(true);
+        UI.showOverlay(null);
+      },
+
+      addPing(x, y, maxR, kind) {
+        this.pings.push({ x, y, r: 4, maxR, alpha: 1, kind, speed: kind === "decoy" ? 90 : TUNE.pingSpeed, heard: new Set() });
+      },
+
+      firePing() {
+        if (this.state !== "PLAYING" || this.pingCool > 0) return;
+        const s = this.sub;
+        if (s.battery < 5) { Log.add("Battery too low to ping.", "warn"); Sound.denied(); this.pingCool = 0.4; return; }
+        s.battery -= TUNE.pingCost; s.ping = 1; this.stats.pings++; this.pingCool = 0.35;
+        this.addPing(s.x, s.y, TUNE.pingRange, "sonar");
+        Sound.ping(false);
+      },
+
+      toggleSilent() {
+        if (this.state !== "PLAYING") return;
+        this.sub.silent = !this.sub.silent;
+        Sound.valve();
+        Log.add(this.sub.silent ? "Silent running. Thrusters throttled, signature falling." : "Silent running off. Full thrust available.", "own");
+      },
+
+      deployDecoy() {
+        if (this.state !== "PLAYING") return;
+        const s = this.sub;
+        if (this.decoyStock <= 0) { Log.add("No decoys left.", "warn"); Sound.denied(); return; }
+        if (this.decoyCool > 0) { Sound.denied(); return; }
+        if (s.battery < TUNE.decoyCost) { Log.add("Battery too low to launch a decoy.", "warn"); Sound.denied(); return; }
+        this.decoyStock--; this.decoyCool = TUNE.decoyCooldown; s.battery -= TUNE.decoyCost; this.stats.decoys++;
+        this.decoys.push({ x: s.x, y: s.y, life: TUNE.decoyLife, pulse: 0 });
+        Sound.decoyDrop(s.x);
+        Log.add("Noisemaker away. Contact will follow the decoy while it lasts.", "own", true);
+      },
+
+      advancePings(dt) {
+        for (const p of this.pings) {
+          const prev = p.r;
+          p.r += p.speed * dt;
+          p.alpha = Math.max(0, 1 - p.r / p.maxR);
+          if (p.kind === "sonar" && this.state === "PLAYING") this.reveal(p, prev);
+        }
+        this.pings = this.pings.filter(p => p.r < p.maxR);
+      },
+
+      reveal(p, prev) {
+        const now = View.clock;
+        for (const pt of this.points) {
+          const dx = pt.x - p.x, dy = pt.y - p.y, d = Math.hypot(dx, dy);
+          if (d > prev && d <= p.r && d <= p.maxR && (pt.nx * -dx + pt.ny * -dy) > 0) {
+            pt.hit = now; pt.gain = 0.4 + 0.6 * (1 - d / p.maxR);
+            if (pt.wall !== undefined && !p.heard.has(pt.wall)) { p.heard.add(pt.wall); Sound.echo(pt.x, "wall", pt.gain); }
+          }
+        }
+        this.stations.forEach((st, i) => {
+          const d = Math.hypot(st.x - p.x, st.y - p.y);
+          if (d > prev && d <= p.r && d <= p.maxR) {
+            st.hit = now; Sound.echo(st.x, "station", 1);
+            if (!st.located) { st.located = true; if (st.state === "unlocated") st.state = "located"; Log.add("Station " + STATION_DEFS[i].name + " located.", "warn", true); }
+          }
+        });
+        const l = this.lev, ld = Math.hypot(l.x - p.x, l.y - p.y);
+        if (ld > prev && ld <= p.r && ld <= p.maxR) { l.hit = now; Sound.echo(l.x, "threat", 1); }
+      },
+
+      step(dt) {
+        this.advancePings(dt);
+        if (this.state !== "PLAYING") return;
+        this.sim(dt);
+      },
+
+      sim(dt) {
+        const s = this.sub, l = this.lev;
+        this.t += dt;
+        this.decoyCool = Math.max(0, this.decoyCool - dt);
+        this.pingCool = Math.max(0, this.pingCool - dt);
+
+        // pilot
+        let ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+        let iy = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+        const il = Math.hypot(ix, iy) || 1;
+        const thrust = s.silent ? TUNE.thrustSilent : TUNE.thrust;
+        s.vx += (ix / il) * thrust * dt; s.vy += (iy / il) * thrust * dt;
+        const damp = Math.exp(-TUNE.drag * dt);
+        s.vx *= damp; s.vy *= damp;
+        s.x = clamp(s.x + s.vx * dt, 24, W - 24); s.y = clamp(s.y + s.vy * dt, 24, H - 24);
+        for (const w of WALL_DEFS) this.pushOut(s, w.x, w.y, w.r + SUB_R);
+        s.speed = Math.hypot(s.vx, s.vy);
+
+        // noise, battery
+        const target = s.silent ? 0.04 : 0.05 + 0.95 * clamp(s.speed / 90, 0, 1);
+        s.noise += (target - s.noise) * (1 - Math.exp(-(target > s.noise ? 1.4 : 1.2) * dt));
+        s.ping = Math.max(0, s.ping - 0.55 * dt);
+        if (!s.silent && s.speed > 40) s.battery = Math.max(0, s.battery - dt * 1.1);
+        else s.battery = Math.min(100, s.battery + dt * 1.6);
+        if (s.battery < 15 && !this.lowBat) { this.lowBat = true; Log.add("Battery low. Stop thrusting to recharge.", "warn"); }
+        if (s.battery > 30) this.lowBat = false;
+
+        // stations
+        this.stations.forEach((st, i) => {
+          if (st.done) return;
+          const d = Math.hypot(s.x - st.x, s.y - st.y), was = st.state;
+          if (d < STATION_RANGE) {
+            if (!st.located) { st.located = true; }
+            if (s.speed < TUNE.calibMaxSpeed) { st.prog = Math.min(100, st.prog + TUNE.calibRate * dt); st.state = "calibrating"; }
+            else { st.prog = Math.max(0, st.prog - 2 * dt); st.state = "drifting"; }
+          } else {
+            st.prog = Math.max(0, st.prog - TUNE.calibDecay * dt);
+            st.state = st.located ? "located" : "unlocated";
+          }
+          if (st.state === "calibrating" && was !== "calibrating") Log.add("Calibrating " + STATION_DEFS[i].name + ". Hold still.", "warn");
+          if (st.state === "drifting" && was !== "drifting") Log.add("Too much drift at " + STATION_DEFS[i].name + ". Hold still.", "warn");
+          if (st.prog >= 100) {
+            st.done = true; st.state = "online";
+            this.addPing(st.x, st.y, 380, "sonar");
+            this.bursts.push({ x: st.x, y: st.y, life: 3, level: 1.2 });
+            Sound.stationOnline(i);
+            const n = this.stations.filter(q => q.done).length;
+            Log.add("Station " + STATION_DEFS[i].name + " online (" + n + " of 4). Uplink burst sent.", "good", true);
+          }
+        });
+        if (this.stations.every(q => q.done)) { this.finish("ESCAPED"); return; }
+
+        // decoys and uplink bursts
+        for (const dc of this.decoys) {
+          dc.life -= dt; dc.pulse -= dt;
+          if (dc.pulse <= 0) { dc.pulse = 1.4; this.addPing(dc.x, dc.y, 90, "decoy"); Sound.decoyPulse(dc.x); }
+        }
+        for (const b of this.bursts) b.life -= dt;
+        this.bursts = this.bursts.filter(b => b.life > 0);
+
+        // contact AI: it hunts the loudest source it can hear
+        const loud = (src, d) => src / (1 + d / TUNE.levFalloff);
+        let best = null, bestL = 0;
+        const consider = (x, y, src) => { const L = loud(src, Math.hypot(x - l.x, y - l.y)); if (L > bestL) { bestL = L; best = { x, y }; } };
+        consider(s.x, s.y, Math.max(s.silent ? s.noise * 0.2 : s.noise, s.ping));
+        { const dp = Math.hypot(s.x - l.x, s.y - l.y), L = 1 / (1 + (dp / TUNE.levProximity) ** 2); if (L > bestL) { bestL = L; best = { x: s.x, y: s.y }; } }
+        for (const dc of this.decoys) consider(dc.x, dc.y, TUNE.decoyLevel);
+        for (const b of this.bursts) consider(b.x, b.y, b.level * (b.life / 3));
+        const heard = bestL > TUNE.levHear;
+        if (heard) {
+          l.tx = best.x; l.ty = best.y; l.mode = "hunt";
+          const at = clamp(bestL * 1.6, 0.25, 1);
+          l.alert = at > l.alert ? Math.min(at, l.alert + 0.9 * dt) : Math.max(0, l.alert - 0.12 * dt);
+        } else {
+          if (l.mode === "hunt") { l.mode = "search"; l.timer = 5; }
+          l.alert = Math.max(0, l.alert - 0.12 * dt);
+        }
+        let dxT = l.tx - l.x, dyT = l.ty - l.y, dT = Math.hypot(dxT, dyT);
+        if (l.mode === "search") {
+          l.timer -= dt;
+          if (dT < 14) { l.tx += (rand() - 0.5) * 120 * dt * 6; l.ty += (rand() - 0.5) * 120 * dt * 6; l.tx = clamp(l.tx, 40, W - 40); l.ty = clamp(l.ty, 40, H - 40); }
+          if (l.timer <= 0) { l.mode = "patrol"; l.timer = 0; }
+        }
+        if (l.mode === "patrol") {
+          l.timer -= dt;
+          if (l.timer <= 0 || dT < 16) { l.tx = 60 + rand() * (W - 120); l.ty = 60 + rand() * (H - 120); l.timer = 5 + rand() * 4; }
+        }
+        dxT = l.tx - l.x; dyT = l.ty - l.y; dT = Math.hypot(dxT, dyT) || 1;
+        let speed = TUNE.levBase + l.alert * TUNE.levAlert;
+        if (l.lock > 0) { l.lock -= dt; speed *= 0.12; }
+        const arrive = clamp(dT / 40, 0.15, 1);
+        // steer around rocks that sit on the straight line to the target
+        const px = dxT / dT, py = dyT / dT;
+        let sx = px, sy = py;
+        for (const w of WALL_DEFS) {
+          const rx = w.x - l.x, ry = w.y - l.y, ahead = rx * px + ry * py;
+          if (ahead <= 0 || ahead > Math.min(dT, 220) + w.r) continue;
+          const off = -rx * py + ry * px, clear = w.r + LEV_R + 16;
+          if (Math.abs(off) >= clear) continue;
+          // pass on the side that needs the smaller detour, unless that detour leaves the arena
+          const inArena = lat => { const dx = l.x + px * ahead - py * lat, dy = l.y + py * ahead + px * lat; return dx > LEV_R && dx < W - LEV_R && dy > LEV_R && dy < H - LEV_R; };
+          const latA = off + clear, latB = off - clear;
+          let lat = Math.abs(latA) <= Math.abs(latB) ? latA : latB;
+          if (!inArena(lat)) lat = lat === latA ? latB : latA;
+          const dir = Math.abs(lat) < 4 ? l.side : Math.sign(lat);
+          const push = (1.6 * (1 - Math.abs(off) / clear) + 0.4) * clamp(1.3 - ahead / 220, 0.25, 1);
+          sx += -py * dir * push; sy += px * dir * push;
+        }
+        const sl = Math.hypot(sx, sy) || 1;
+        const wvx = sx / sl * speed * arrive, wvy = sy / sl * speed * arrive;
+        const k = 1 - Math.exp(-3 * dt);
+        l.vx += (wvx - l.vx) * k; l.vy += (wvy - l.vy) * k;
+        l.x += l.vx * dt; l.y += l.vy * dt;
+        for (const w of WALL_DEFS) {
+          const dx = l.x - w.x, dy = l.y - w.y, dd = Math.hypot(dx, dy), minD = w.r + LEV_R;
+          if (dd < minD) {
+            const nx = dx / (dd || 1), ny = dy / (dd || 1);
+            l.x = w.x + nx * minD; l.y = w.y + ny * minD;
+            const vn = l.vx * nx + l.vy * ny;
+            if (vn < 0) { l.vx -= vn * nx; l.vy -= vn * ny; }
+            l.vx += -ny * l.side * speed * 0.6 * dt; l.vy += nx * l.side * speed * 0.6 * dt;
+          }
+        }
+        l.x = clamp(l.x, 30, W - 30); l.y = clamp(l.y, 30, H - 30);
+
+        // decoy lifetime: the contact wrecks a decoy it reaches
+        this.decoys = this.decoys.filter(dc => {
+          if (Math.hypot(dc.x - l.x, dc.y - l.y) < 32) { l.lock = 3.5; l.mode = "search"; l.timer = 5; l.tx = dc.x; l.ty = dc.y; Sound.decoyGone(dc.x); Log.add("Decoy destroyed. Contact is circling the wreck.", "own", true); return false; }
+          if (dc.life <= 0) { Log.add("Decoy battery exhausted.", "own"); return false; }
+          return true;
+        });
+
+        // fear
+        const dSub = Math.hypot(s.x - l.x, s.y - l.y);
+        s.bpm = Math.round(clamp(62 + Math.max(0, (380 - dSub) * 0.3), 62, 175));
+        if (dSub < 150) this.flicker = (150 - dSub) / 150; else this.flicker = Math.max(0, this.flicker - dt * 2);
+        if (dSub < 160 && !this.warned) { this.warned = true; Log.add("Contact close, bearing " + String(Math.round(bearingOf(l.x - s.x, l.y - s.y))).padStart(3, "0") + ".", "threat", true); }
+        if (dSub > 240) this.warned = false;
+        if (dSub < LEV_R + 2) this.finish("HULL_BREACH");
+      },
+
+      pushOut(o, cx, cy, minD) {
+        const dx = o.x - cx, dy = o.y - cy, d = Math.hypot(dx, dy);
+        if (d < minD) {
+          const nx = dx / (d || 1), ny = dy / (d || 1);
+          o.x = cx + nx * minD; o.y = cy + ny * minD;
+          const vn = o.vx * nx + o.vy * ny;
+          if (vn < 0) { o.vx -= vn * nx; o.vy -= vn * ny; }
+        }
+      },
+
+      finish(state) {
+        this.state = state;
+        Object.keys(keys).forEach(k => keys[k] = false);
+        if (state === "HULL_BREACH") { Sound.breach(); Log.add("Hull breach at 3,840 m. Signal lost.", "threat", true); }
+        else { Sound.escape(); Log.add("All four stations online. Telemetry restored.", "good", true); }
+        UI.showOverlay(state);
       }
-      pings.push({ x, y, r: 4, maxR, alpha: 1.0 });
+    };
+
+    /* ------------------------------------------------------------------
+       Hydrophone. Bearing to the contact. Your own noise and pings mask
+       it, distance weakens it, and the displayed bearing wobbles by the
+       current uncertainty.
+       ------------------------------------------------------------------ */
+    const Hydro = {
+      b: 0, trueB: 0, unc: 70, q: 0, locked: false, band: "NONE", hist: [], jit: 0, nextJ: 0, decoyB: null, d: 9999,
+      reset() { this.hist = []; this.q = 0; this.locked = false; this.band = "NONE"; this.decoyB = null; },
+      update(now, dt) {
+        const g = Game;
+        if (g.state === "STANDBY") { this.locked = false; this.q = 0; this.band = "NONE"; return; }
+        const dx = g.lev.x - g.sub.x, dy = g.lev.y - g.sub.y, d = Math.hypot(dx, dy);
+        this.d = d;
+        const own = g.sub.silent ? g.sub.noise * 0.2 : g.sub.noise;
+        const mask = Math.max(own, g.sub.ping * 0.8);
+        this.q = clamp(1 - d / HEAR_RANGE, 0, 1) * (1 - 0.6 * mask);
+        this.locked = g.state === "PLAYING" && this.q > 0.07;
+        this.unc = 5 + 62 * Math.pow(1 - clamp(this.q * 1.6, 0, 1), 1.3);
+        if (now >= this.nextJ) { this.jit = Math.random() * 2 - 1; this.nextJ = now + 0.11; }
+        this.trueB = bearingOf(dx, dy);
+        const target = (this.trueB + this.jit * this.unc * 0.6 + 360) % 360;
+        this.b = (this.b + angDelta(this.b, target) * Math.min(1, dt * 12) + 360) % 360;
+        this.band = d < 120 ? "CLOSE" : d < 240 ? "NEAR" : d < 380 ? "MID" : d < HEAR_RANGE ? "FAR" : "NONE";
+        const rr = clamp(d / HEAR_RANGE, 0.08, 1);
+        this.hist.push({ b: this.b, r: rr, t: now, on: this.locked });
+        while (this.hist.length && now - this.hist[0].t > 1.5) this.hist.shift();
+        const dc = g.decoys[0];
+        this.decoyB = dc ? bearingOf(dc.x - g.sub.x, dc.y - g.sub.y) : null;
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       View. Three phosphor layers per echo: a short white flash, a
+       medium green bloom and a long deep afterglow. Points are redrawn
+       from their hit time each frame, so persistence is exact and does
+       not smear or leave ghost pixels.
+       ------------------------------------------------------------------ */
+    const PALETTE = {
+      wall: { flash: [214, 255, 238], glow: [61, 240, 176], after: [16, 122, 92] },
+      station: { flash: [255, 240, 200], glow: [255, 194, 74], after: [150, 96, 10] },
+      online: { flash: [220, 255, 240], glow: [92, 242, 176], after: [20, 140, 100] },
+      threat: { flash: [255, 214, 222], glow: [255, 92, 120], after: [140, 28, 52] },
+      decoy: { flash: [220, 250, 255], glow: [127, 220, 255], after: [30, 110, 150] },
+      trail: { flash: [150, 255, 220], glow: [40, 190, 140], after: [14, 100, 78] }
+    };
+    const Sprites = {};
+    function sprite(rgb) {
+      const key = rgb.join(","); if (Sprites[key]) return Sprites[key];
+      const c = document.createElement("canvas"); c.width = c.height = 64;
+      const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, `rgba(${key},1)`); g.addColorStop(0.25, `rgba(${key},0.55)`); g.addColorStop(0.6, `rgba(${key},0.12)`); g.addColorStop(1, `rgba(${key},0)`);
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+      return (Sprites[key] = c);
     }
 
+    const View = {
+      clock: 0, S: 1,
+      sonar: $("sonar"), sctx: null, still: document.createElement("canvas"),
+      compass: $("compass"), cctx: null,
+
+      init() {
+        this.sctx = this.sonar.getContext("2d");
+        this.cctx = this.compass.getContext("2d");
+        const cs = 2; this.compass.width = 240 * cs; this.compass.height = 240 * cs;
+        new ResizeObserver(() => this.resize()).observe(this.sonar);
+        this.resize();
+      },
+      resize() {
+        const w = Math.max(320, Math.round(this.sonar.clientWidth * (window.devicePixelRatio || 1)));
+        this.sonar.width = w; this.sonar.height = Math.round(w * H / W);
+        this.S = w / W;
+        this.buildStill();
+      },
+
+      buildStill() {
+        const S = this.S, c = this.still; c.width = this.sonar.width; c.height = this.sonar.height;
+        const x = c.getContext("2d"); x.setTransform(S, 0, 0, S, 0, 0);
+        x.fillStyle = "#020a0c"; x.fillRect(0, 0, W, H);
+        x.lineWidth = 1 / S;
+        for (let gx = 0; gx <= W; gx += 40) { x.strokeStyle = gx % 200 === 0 ? "rgba(70, 200, 160, 0.13)" : "rgba(70, 200, 160, 0.055)"; x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
+        for (let gy = 0; gy <= H; gy += 40) { x.strokeStyle = gy % 200 === 0 ? "rgba(70, 200, 160, 0.13)" : "rgba(70, 200, 160, 0.055)"; x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
+        const v = x.createRadialGradient(W / 2, H / 2, 120, W / 2, H / 2, 560);
+        v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,0.5)");
+        x.fillStyle = v; x.fillRect(0, 0, W, H);
+      },
+
+      glow(kind, px, py, age, gain, size) {
+        const p = PALETTE[kind], c = this.sctx;
+        const a1 = gain * Math.exp(-age / 0.13), a2 = gain * 0.85 * Math.exp(-age / 1.2), a3 = gain * 0.55 * Math.exp(-age / 5);
+        if (a3 > 0.012) { c.globalAlpha = Math.min(1, a3); const s = 10 * size; c.drawImage(sprite(p.after), px - s / 2, py - s / 2, s, s); }
+        if (a2 > 0.012) { c.globalAlpha = Math.min(1, a2); const s = 20 * size; c.drawImage(sprite(p.glow), px - s / 2, py - s / 2, s, s); }
+        if (a1 > 0.012) { c.globalAlpha = Math.min(1, a1); const s = 32 * size; c.drawImage(sprite(p.flash), px - s / 2, py - s / 2, s, s); }
+      },
+
+      drawSonar() {
+        const c = this.sctx, g = Game, now = this.clock, S = this.S;
+        c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = "source-over"; c.globalAlpha = 1;
+        c.drawImage(this.still, 0, 0);
+        c.setTransform(S, 0, 0, S, 0, 0);
+        c.font = "16px VT323, monospace"; c.textBaseline = "alphabetic";
+        const s = g.sub;
+        if (!s) return;
+
+        // range rings around the bathysphere
+        c.lineWidth = 1; c.setLineDash([3, 6]);
+        for (let r = 100; r <= 400; r += 100) { c.strokeStyle = "rgba(92, 242, 176, 0.11)"; c.beginPath(); c.arc(s.x, s.y, r, 0, TAU); c.stroke(); }
+        c.setLineDash([]);
+        c.fillStyle = "rgba(120, 184, 162, 0.7)";
+        for (let r = 100; r <= 400; r += 100) c.fillText(r + " m", s.x + r * 0.7071 + 4, s.y - r * 0.7071 - 2);
+
+        c.globalCompositeOperation = "lighter";
+
+        // own track, the slowest layer
+        for (const t of this.trail) { const age = now - t.t; if (age < 12) this.glow("trail", t.x, t.y, age, 0.5, 0.5); }
+
+        // wall and rim echoes
+        for (const pt of g.points) {
+          const age = now - pt.hit; if (age < 0 || age > 14) continue;
+          this.glow("wall", pt.x, pt.y, age, pt.gain * (pt.kind === "rim" ? 0.6 : 1), pt.kind === "rim" ? 0.7 : 1);
+        }
+
+        // stations
+        g.stations.forEach((st, i) => {
+          const age = now - st.hit;
+          if (st.done) {
+            const beat = 0.5 + 0.5 * Math.sin(now * 2.4 + i);
+            c.globalAlpha = 0.45 + 0.4 * beat; const sz = 22; c.drawImage(sprite(PALETTE.online.glow), st.x - sz / 2, st.y - sz / 2, sz, sz);
+            c.globalAlpha = 0.5; c.strokeStyle = "rgb(92,242,176)"; c.lineWidth = 1.5; c.beginPath(); c.arc(st.x, st.y, 18, 0, TAU); c.stroke();
+          } else if (age >= 0 && age < 14) {
+            this.glow("station", st.x, st.y, age, 1.25, 1.4);
+            c.globalAlpha = Math.min(1, 1.1 * Math.exp(-age / 3.5)); c.strokeStyle = "rgb(255,194,74)"; c.lineWidth = 1.5;
+            c.beginPath(); c.arc(st.x, st.y, 18, 0, TAU); c.stroke();
+            c.fillStyle = "rgb(255,194,74)"; c.fillText(STATION_DEFS[i].name.toUpperCase(), st.x + 24, st.y + 5);
+          }
+          if (!st.done && st.prog > 0) {
+            c.globalAlpha = 0.95; c.strokeStyle = st.state === "drifting" ? "rgb(255,107,134)" : "rgb(255,194,74)"; c.lineWidth = 3;
+            c.beginPath(); c.arc(st.x, st.y, 24, -Math.PI / 2, -Math.PI / 2 + TAU * st.prog / 100); c.stroke();
+          }
+        });
+
+        // the contact, only when a ping has crossed it
+        const l = g.lev, la = now - l.hit;
+        if (la >= 0 && la < 7) {
+          this.glow("threat", l.x, l.y, la, 1.6, 2.4);
+          c.globalAlpha = Math.min(1, 1.2 * Math.exp(-la / 2.2)); c.strokeStyle = "rgb(255,107,134)"; c.lineWidth = 2;
+          c.beginPath(); c.arc(l.x, l.y, 20, 0, TAU); c.stroke();
+          const sp = Math.hypot(l.vx, l.vy) || 1; c.beginPath(); c.moveTo(l.x, l.y); c.lineTo(l.x + l.vx / sp * 34, l.y + l.vy / sp * 34); c.stroke();
+          c.fillStyle = "rgb(255,107,134)"; c.fillText("UNIDENTIFIED ACOUSTIC CONTACT", clamp(l.x - 96, 8, W - 232), l.y - 30 < 14 ? l.y + 42 : l.y - 30);
+        }
+
+        // decoys
+        for (const dc of g.decoys) {
+          const beat = 0.5 + 0.5 * Math.sin(now * 7);
+          c.globalAlpha = 0.5 + 0.4 * beat; c.drawImage(sprite(PALETTE.decoy.glow), dc.x - 14, dc.y - 14, 28, 28);
+          c.globalAlpha = 0.95; c.strokeStyle = "rgb(127,220,255)"; c.lineWidth = 1.5; c.strokeRect(dc.x - 5, dc.y - 5, 10, 10);
+          c.globalAlpha = 0.8; c.fillStyle = "rgb(127,220,255)"; c.fillText("DECOY " + Math.ceil(Math.max(0, dc.life)) + "s", dc.x + 12, dc.y - 10);
+        }
+
+        // sonar rings, three strokes for glow, core and flash
+        for (const p of g.pings) {
+          const a = p.alpha, col = p.kind === "decoy" ? "127,220,255" : "92,242,176", core = p.kind === "decoy" ? "225,250,255" : "190,255,225";
+          c.lineWidth = 10; c.strokeStyle = `rgba(${col},${a * 0.07})`; c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.stroke();
+          c.lineWidth = 4; c.strokeStyle = `rgba(${col},${a * 0.2})`; c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.stroke();
+          c.lineWidth = 1.6; c.strokeStyle = `rgba(${core},${a * 0.9})`; c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.stroke();
+        }
+
+        c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+
+        // acoustic signature ring and the bathysphere
+        const sig = Math.max(s.silent ? s.noise * 0.2 : s.noise, s.ping);
+        c.strokeStyle = `rgba(255,194,74,${0.12 + 0.3 * sig})`; c.lineWidth = 1; c.setLineDash([4, 5]);
+        c.beginPath(); c.arc(s.x, s.y, 14 + 70 * sig, 0, TAU); c.stroke(); c.setLineDash([]);
+        const col = s.silent ? "#78d6ff" : "#8dfbd0";
+        c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); c.arc(s.x, s.y, 9, 0, TAU); c.stroke();
+        c.fillStyle = col; c.beginPath(); c.arc(s.x, s.y, 3, 0, TAU); c.fill();
+        c.lineWidth = 1; c.beginPath(); c.moveTo(s.x - 15, s.y); c.lineTo(s.x - 11, s.y); c.moveTo(s.x + 11, s.y); c.lineTo(s.x + 15, s.y); c.moveTo(s.x, s.y - 15); c.lineTo(s.x, s.y - 11); c.moveTo(s.x, s.y + 11); c.lineTo(s.x, s.y + 15); c.stroke();
+
+        if (g.flicker > 0.05) { c.fillStyle = `rgba(255, 40, 70, ${g.flicker * 0.14})`; c.fillRect(0, 0, W, H); }
+      },
+
+      trail: [], nextTrail: 0,
+      sampleTrail(now) {
+        const g = Game;
+        if (g.state !== "PLAYING") return;
+        if (now >= this.nextTrail) { this.trail.push({ x: g.sub.x, y: g.sub.y, t: now }); this.nextTrail = now + 0.14; }
+        while (this.trail.length && now - this.trail[0].t > 12) this.trail.shift();
+      },
+
+      drawCompass() {
+        const c = this.cctx, now = this.clock, g = Game;
+        c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 240, 240);
+        const cx = 120, cy = 120, R = 104;
+        c.fillStyle = "#020a0c"; c.beginPath(); c.arc(cx, cy, R + 8, 0, TAU); c.fill();
+        c.lineWidth = 1;
+        for (const rr of [0.33, 0.66]) { c.strokeStyle = "rgba(92,242,176,0.14)"; c.beginPath(); c.arc(cx, cy, R * rr, 0, TAU); c.stroke(); }
+        c.strokeStyle = "rgba(92,242,176,0.55)"; c.lineWidth = 1.5; c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.stroke();
+        for (let a = 0; a < 360; a += 5) {
+          const rad = (a - 90) * Math.PI / 180, major = a % 30 === 0, len = major ? 11 : a % 10 === 0 ? 7 : 4;
+          c.strokeStyle = major ? "rgba(169,240,210,0.85)" : "rgba(120,184,162,0.5)"; c.lineWidth = 1;
+          c.beginPath(); c.moveTo(cx + Math.cos(rad) * (R - len), cy + Math.sin(rad) * (R - len)); c.lineTo(cx + Math.cos(rad) * R, cy + Math.sin(rad) * R); c.stroke();
+        }
+        c.font = "22px VT323, monospace"; c.textAlign = "center"; c.textBaseline = "middle";
+        [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(([t, a]) => {
+          const rad = (a - 90) * Math.PI / 180; c.fillStyle = t === "N" ? "#ffc24a" : "#a9f0d2";
+          c.fillText(t, cx + Math.cos(rad) * (R - 21), cy + Math.sin(rad) * (R - 21));
+        });
+        c.font = "13px VT323, monospace"; c.fillStyle = "rgba(120,184,162,0.8)";
+        c.textAlign = "left"; c.fillText("1/3", cx + R * 0.33 * 0.7071 + 3, cy + R * 0.33 * 0.7071 + 12); c.fillText("2/3", cx + R * 0.66 * 0.7071 + 3, cy + R * 0.66 * 0.7071 + 12); c.textAlign = "center";
+
+        if (g.state === "STANDBY") { c.fillStyle = "rgba(120,184,162,0.9)"; c.font = "20px VT323, monospace"; c.fillText("NO LINK", cx, cy + 36); }
+        else {
+          // stations already located, as bearing marks on the mid ring
+          g.stations.forEach(st => {
+            if (!st.located) return;
+            const b = bearingOf(st.x - g.sub.x, st.y - g.sub.y), rad = (b - 90) * Math.PI / 180, rr = R * 0.82;
+            const px = cx + Math.cos(rad) * rr, py = cy + Math.sin(rad) * rr;
+            c.fillStyle = st.done ? "#5cf2b0" : "#ffc24a"; c.beginPath(); c.moveTo(px, py - 5); c.lineTo(px + 4, py); c.lineTo(px, py + 5); c.lineTo(px - 4, py); c.closePath(); c.fill();
+          });
+          if (Hydro.decoyB !== null) {
+            const rad = (Hydro.decoyB - 90) * Math.PI / 180, px = cx + Math.cos(rad) * (R + 1), py = cy + Math.sin(rad) * (R + 1);
+            c.fillStyle = "#7fdcff"; c.beginPath(); c.arc(px, py, 5, 0, TAU); c.fill();
+          }
+          // contact: uncertainty wedge, afterimage fan, current needle
+          c.globalCompositeOperation = "lighter";
+          for (const h of Hydro.hist) {
+            if (!h.on) continue;
+            const age = now - h.t, rad = (h.b - 90) * Math.PI / 180, rr = R * h.r;
+            c.globalAlpha = 0.45 * Math.exp(-age / 0.5);
+            c.drawImage(sprite(PALETTE.threat.glow), cx + Math.cos(rad) * rr - 7, cy + Math.sin(rad) * rr - 7, 14, 14);
+          }
+          c.globalAlpha = 1;
+          if (Hydro.locked) {
+            const half = Hydro.unc * Math.PI / 180, mid = (Hydro.b - 90) * Math.PI / 180, rr = R * clamp(Hydro.d / HEAR_RANGE, 0.08, 1);
+            c.fillStyle = "rgba(255,92,120,0.15)"; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, mid - half, mid + half); c.closePath(); c.fill();
+            c.strokeStyle = "rgba(255,150,170,0.9)"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(mid) * rr, cy + Math.sin(mid) * rr); c.stroke();
+            c.globalAlpha = 1; c.drawImage(sprite(PALETTE.threat.flash), cx + Math.cos(mid) * rr - 9, cy + Math.sin(mid) * rr - 9, 18, 18);
+            c.drawImage(sprite(PALETTE.threat.glow), cx + Math.cos(mid) * rr - 14, cy + Math.sin(mid) * rr - 14, 28, 28);
+          } else if (g.state === "PLAYING") {
+            // static where there is no lock
+            for (let i = 0; i < 14; i++) { const a = Math.random() * TAU, r = Math.random() * R * 0.9; c.globalAlpha = 0.05 + Math.random() * 0.12; c.fillStyle = "#5cf2b0"; c.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.5, 1.5); }
+          }
+          c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+        }
+        c.fillStyle = "#8dfbd0"; c.beginPath(); c.arc(cx, cy, 3, 0, TAU); c.fill();
+        c.textAlign = "start"; c.textBaseline = "alphabetic";
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       Spectrogram, a scrolling waterfall of the live analyser output.
+       ------------------------------------------------------------------ */
+    const Spectro = {
+      cv: $("spec"), ctx: null, ready: false, lut: null, rowBin: null, acc: 0, buf: null,
+      FMIN: 30, FMAX: 4000, SPEED: 46,
+      init() {
+        const a = Sound.analyser; if (!a) return;
+        this.ctx = this.cv.getContext("2d");
+        this.ctx.fillStyle = "#010506"; this.ctx.fillRect(0, 0, this.cv.width, this.cv.height);
+        this.buf = new Uint8Array(a.frequencyBinCount);
+        const nyq = Sound.ctx.sampleRate / 2, h = this.cv.height;
+        this.rowBin = new Float32Array(h);
+        for (let y = 0; y < h; y++) {
+          const f = this.FMAX * Math.pow(this.FMIN / this.FMAX, y / (h - 1));
+          this.rowBin[y] = clamp(f / nyq * a.frequencyBinCount, 0, a.frequencyBinCount - 2);
+        }
+        const stops = [[0, [0, 4, 5]], [0.18, [2, 28, 22]], [0.42, [10, 120, 88]], [0.68, [70, 235, 170]], [0.88, [200, 255, 232]], [1, [255, 255, 255]]];
+        this.lut = new Uint8ClampedArray(256 * 3);
+        for (let i = 0; i < 256; i++) {
+          const t = i / 255; let k = 0; while (k < stops.length - 2 && t > stops[k + 1][0]) k++;
+          const [t0, c0] = stops[k], [t1, c1] = stops[k + 1], u = clamp((t - t0) / (t1 - t0), 0, 1);
+          for (let j = 0; j < 3; j++) this.lut[i * 3 + j] = lerp(c0[j], c1[j], u);
+        }
+        this.ready = true;
+      },
+      draw(dt) {
+        if (!this.ready || !Sound.ok()) return;
+        const h = this.cv.height, w = this.cv.width;
+        this.acc += dt * this.SPEED;
+        const step = Math.min(10, Math.floor(this.acc)); if (step < 1) return;
+        this.acc -= step; if (this.acc > 3) this.acc = 0;
+        Sound.analyser.getByteFrequencyData(this.buf);
+        const img = this.ctx.createImageData(step, h), d = img.data;
+        for (let y = 0; y < h; y++) {
+          const b = this.rowBin[y], i0 = Math.floor(b), fr = b - i0;
+          const v = Math.round(this.buf[i0] * (1 - fr) + this.buf[i0 + 1] * fr), li = v * 3;
+          for (let x = 0; x < step; x++) { const o = (y * step + x) * 4; d[o] = this.lut[li]; d[o + 1] = this.lut[li + 1]; d[o + 2] = this.lut[li + 2]; d[o + 3] = 255; }
+        }
+        this.ctx.drawImage(this.cv, -step, 0);
+        this.ctx.putImageData(img, w - step, 0);
+      },
+      placeAxis() {
+        const host = $("spectro");
+        [[4000, "4 kHz"], [1000, "1 kHz"], [250, "250 Hz"], [60, "60 Hz"]].forEach(([f, label]) => {
+          const el = document.createElement("span"); el.className = "axis"; el.textContent = label;
+          el.style.top = ((1 - Math.log(f / this.FMIN) / Math.log(this.FMAX / this.FMIN)) * 100).toFixed(1) + "%";
+          host.appendChild(el);
+        });
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       HUD and UI
+       ------------------------------------------------------------------ */
+    const setText = (el, v) => { if (el._v !== v) { el._v = v; el.textContent = v; } };
+    const setAttr = (el, k, v) => { const key = "_" + k; if (el[key] !== v) { el[key] = v; el.setAttribute(k, v); } };
+    const UI = {
+      stationEls: [], pips: [],
+      init() {
+        const list = $("stationList");
+        STATION_DEFS.forEach(d => {
+          const li = document.createElement("li"); li.className = "st";
+          li.innerHTML = '<span class="st-name"></span><span class="st-state"></span><span class="st-bar" aria-hidden="true"><i></i></span>';
+          li.querySelector(".st-name").append(d.name, Object.assign(document.createElement("small"), { textContent: d.freq + " Hz" }));
+          list.appendChild(li);
+          this.stationEls.push({ li, state: li.querySelector(".st-state"), bar: li.querySelector("i") });
+        });
+        const pips = $("pips");
+        for (let i = 0; i < TUNE.decoyStock; i++) { const p = document.createElement("span"); p.className = "pip"; pips.appendChild(p); this.pips.push(p); }
+      },
+      hud(now) {
+        const g = Game, s = g.sub;
+        setText($("clockTxt"), fmtTime(g.t));
+        const done = g.stations.filter(q => q.done).length;
+        setText($("stCount"), done + " / 4");
+        const labels = { unlocated: "Unlocated", located: "Located", calibrating: "Calibrating", drifting: "Hold still", online: "Online" };
+        g.stations.forEach((st, i) => {
+          const e = this.stationEls[i], cls = "st " + st.state;
+          if (e.li._c !== cls) { e.li._c = cls; e.li.className = cls; }
+          setText(e.state, labels[st.state] + (st.state === "calibrating" || st.state === "drifting" ? " " + Math.round(st.prog) + "%" : ""));
+          const w = st.done ? 100 : st.prog; if (e.bar._w !== w) { e.bar._w = w; e.bar.style.width = w.toFixed(1) + "%"; }
+        });
+        const bat = Math.round(s.battery);
+        setText($("batTxt"), bat + "%"); setAttr($("batMeter"), "aria-valuenow", String(bat));
+        const bm = $("batMeter"); bm.classList.toggle("low", bat < 15);
+        const bi = bm.firstElementChild; const bw = bat + "%"; if (bi._w !== bw) { bi._w = bw; bi.style.width = bw; }
+        const sig = Math.round(clamp(Math.max(s.silent ? s.noise * 0.2 : s.noise, s.ping), 0, 1) * 100);
+        setText($("sigPct"), sig + "%"); setAttr($("sigMeter"), "aria-valuenow", String(sig));
+        const si = $("sigMeter").firstElementChild; const sw = sig + "%"; if (si._w !== sw) { si._w = sw; si.style.width = sw; }
+        setText($("bpmTxt"), String(s.bpm));
+        this.pips.forEach((p, i) => p.classList.toggle("on", i < g.decoyStock));
+        setText($("decoyTxt"), String(g.decoyStock)); setText($("decoyBtnCount"), "x" + g.decoyStock);
+        const m = $("modeTxt"); setText(m, s.silent ? "Silent" : "Running"); m.classList.toggle("silent", s.silent);
+        $("silentBtn").setAttribute("aria-pressed", s.silent ? "true" : "false");
+        $("decoyBtn").disabled = g.decoyStock <= 0 && g.state === "PLAYING";
+
+        // hydrophone readouts
+        const active = g.state === "PLAYING";
+        if (active && Hydro.locked) {
+          setText($("brgTxt"), String(Math.round(Hydro.b)).padStart(3, "0")); $("brgTxt").className = "";
+          setText($("rngTxt"), Hydro.band); $("rngTxt").className = Hydro.band === "CLOSE" ? "threat" : "";
+          setText($("sigTxt"), Math.round(Hydro.q * 100) + "%"); $("sigTxt").className = "";
+        } else {
+          setText($("brgTxt"), "---"); $("brgTxt").className = "quiet";
+          setText($("rngTxt"), active ? "NONE" : "---"); $("rngTxt").className = "quiet";
+          setText($("sigTxt"), active ? Math.round(Hydro.q * 100) + "%" : "0%"); $("sigTxt").className = "quiet";
+        }
+      },
+      showOverlay(state) {
+        const ov = $("overlay");
+        ov.classList.toggle("is-breach", state === "HULL_BREACH");
+        if (state === null) { ov.hidden = true; return; }
+        const g = Game, stats = $("overlayStats");
+        ov.hidden = false;
+        if (state === "STANDBY") {
+          $("overlayTitle").textContent = "Signal lost";
+          $("overlayBody").textContent = "The relay went dark at 3,840 m. Calibrate four abyssal stations to bring telemetry back. Every ping shows you the trench and shows the trench where you are.";
+          stats.hidden = true; $("startBtn").textContent = "Begin dive";
+          $("overlayHint").textContent = "Press any key. Sound starts on the first key press, M mutes it.";
+        } else {
+          const won = state === "ESCAPED";
+          $("overlayTitle").textContent = won ? "Telemetry restored" : "Hull breach at 3,840 m";
+          $("overlayBody").textContent = won ? "All four stations are online and the surface has your signal." : "The contact found you. Deploy the backup bathysphere and try a quieter route.";
+          setText($("stTime"), fmtTime(g.t)); setText($("stPings"), String(g.stats.pings)); setText($("stDecoys"), String(g.stats.decoys));
+          setText($("stStations"), g.stations.filter(q => q.done).length + " / 4");
+          stats.hidden = false; $("startBtn").textContent = won ? "Run another dive" : "Deploy backup bathysphere";
+          $("overlayHint").textContent = "Press R or Enter.";
+        }
+        setTimeout(() => { if (!ov.hidden) $("startBtn").focus({ preventScroll: true }); }, 50);
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       Input
+       ------------------------------------------------------------------ */
+    const STEER = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+    const IGNORE_START = new Set(["Tab", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "AltLeft", "AltRight", "MetaLeft", "MetaRight", "CapsLock", "Escape", "KeyM"]);
+    function toggleMute() {
+      Sound.unlock(); Sound.setMuted(!Sound.muted);
+      $("muteBtn").setAttribute("aria-pressed", Sound.muted ? "true" : "false");
+      $("muteState").textContent = Sound.muted ? "muted" : "on";
+      try { localStorage.setItem("slr09-muted", Sound.muted ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+      $("announce").textContent = Sound.muted ? "Sound muted." : "Sound on.";
+    }
     window.addEventListener("keydown", e => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const onButton = e.target instanceof HTMLButtonElement;
+      if ((e.code === "Space" || e.code === "Enter") && onButton) { Sound.unlock(); return; }
+      if (e.code === "Space" || STEER.has(e.code)) e.preventDefault();
+      if (!IGNORE_START.has(e.code)) Sound.unlock();
+      if (e.code === "KeyM") { if (!e.repeat) toggleMute(); return; }
+      if (Game.state === "STANDBY") { if (!e.repeat && !IGNORE_START.has(e.code)) Game.start(); return; }
+      if (e.code === "KeyR" || (Game.state !== "PLAYING" && e.code === "Enter")) { if (!e.repeat) Game.start(); return; }
       keys[e.code] = true;
-      if (e.code === "Space" && state === "PLAYING") {
-        e.preventDefault();
-        emitPing(sub.x, sub.y, 440, true);
-      }
-      if (e.code === "KeyF" && state === "PLAYING") {
-        silentMode = !silentMode;
-      }
-      if (e.code === "KeyR") initGame();
+      if (e.repeat) return;
+      if (e.code === "Space") Game.firePing();
+      else if (e.code === "KeyF") Game.toggleSilent();
+      else if (e.code === "KeyG") Game.deployDecoy();
     });
     window.addEventListener("keyup", e => { keys[e.code] = false; });
-    canvas.addEventListener("mousedown", () => {
-      if (state === "PLAYING") emitPing(sub.x, sub.y, 440, true);
+    window.addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = false); });
+    document.addEventListener("visibilitychange", () => {
+      if (!Sound.ctx) return;
+      if (document.hidden) Sound.ctx.suspend(); else Sound.ctx.resume();
+    });
+    View.sonar.addEventListener("pointerdown", e => { if (e.button === 0) { Sound.unlock(); if (Game.state === "PLAYING") Game.firePing(); } });
+    View.sonar.addEventListener("contextmenu", e => e.preventDefault());
+    function bindButton(id, fn) {
+      $(id).addEventListener("click", e => { Sound.unlock(); fn(); if (e.detail > 0) e.currentTarget.blur(); });
+    }
+    bindButton("muteBtn", toggleMute);
+    bindButton("pingBtn", () => Game.firePing());
+    bindButton("silentBtn", () => Game.toggleSilent());
+    bindButton("decoyBtn", () => Game.deployDecoy());
+    bindButton("restartBtn", () => { if (Game.state === "STANDBY") return; Game.start(); });
+    bindButton("startBtn", () => Game.start());
+    document.querySelectorAll(".dpad .btn").forEach(b => {
+      const k = b.dataset.key;
+      const on = e => { e.preventDefault(); Sound.unlock(); keys[k] = true; };
+      const off = () => { keys[k] = false; };
+      b.addEventListener("pointerdown", on); b.addEventListener("pointerup", off); b.addEventListener("pointerleave", off); b.addEventListener("pointercancel", off);
     });
 
-    let last = performance.now();
-    function update(dt) {
-      if (state !== "PLAYING") return;
-
-      const thrust = silentMode ? 55 : 115;
-      let ax = 0, ay = 0;
-      if (keys["KeyW"] || keys["ArrowUp"]) ay -= thrust;
-      if (keys["KeyS"] || keys["ArrowDown"]) ay += thrust;
-      if (keys["KeyA"] || keys["ArrowLeft"]) ax -= thrust;
-      if (keys["KeyD"] || keys["ArrowRight"]) ax += thrust;
-
-      sub.vx = (sub.vx + ax * dt) * 0.9;
-      sub.vy = (sub.vy + ay * dt) * 0.9;
-      sub.x = Math.max(24, Math.min(W - 24, sub.x + sub.vx * dt));
-      sub.y = Math.max(24, Math.min(H - 24, sub.y + sub.vy * dt));
-
-      const moving = Math.hypot(sub.vx, sub.vy) > 8;
-      if (!silentMode && moving) {
-        sub.noise = Math.min(1, sub.noise + dt * 0.25);
-        sub.battery = Math.max(0, sub.battery - dt * 1.1);
-      } else {
-        sub.noise = Math.max(0.04, sub.noise - dt * 0.35);
-        sub.battery = Math.min(100, sub.battery + dt * 1.6);
-      }
-
-      walls.forEach(w => {
-        const dx = sub.x - w.x, dy = sub.y - w.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < w.r + 12) {
-          const nx = dx / (dist || 1), ny = dy / (dist || 1);
-          sub.x = w.x + nx * (w.r + 12);
-          sub.y = w.y + ny * (w.r + 12);
-        }
-      });
-
-      beacons.forEach(b => {
-        const d = Math.hypot(sub.x - b.x, sub.y - b.y);
-        if (!b.done && d < 46) {
-          b.prog = Math.min(100, b.prog + dt * 42);
-          if (b.prog >= 100) {
-            b.done = true;
-            emitPing(b.x, b.y, 380, false);
-          }
-        }
-      });
-
-      if (beacons.every(b => b.done)) {
-        state = "ESCAPED";
-      }
-
-      // Leviathan acoustic stalking AI
-      if (sub.noise > 0.35 && !silentMode) {
-        leviathan.targetX = sub.x;
-        leviathan.targetY = sub.y;
-        leviathan.alert = Math.min(1, leviathan.alert + dt * 0.3);
-      } else {
-        leviathan.alert = Math.max(0, leviathan.alert - dt * 0.12);
-      }
-
-      const ldx = leviathan.targetX - leviathan.x;
-      const ldy = leviathan.targetY - leviathan.y;
-      const ldist = Math.hypot(ldx, ldy);
-      const lspeed = 42 + leviathan.alert * 68;
-      if (ldist > 10) {
-        leviathan.vx = (ldx / ldist) * lspeed;
-        leviathan.vy = (ldy / ldist) * lspeed;
-      }
-      leviathan.x += leviathan.vx * dt;
-      leviathan.y += leviathan.vy * dt;
-      leviathan.revealed = Math.max(0, leviathan.revealed - dt * 0.45);
-
-      const distToSub = Math.hypot(sub.x - leviathan.x, sub.y - leviathan.y);
-      sub.bpm = Math.round(64 + Math.max(0, (360 - distToSub) * 0.32));
-      if (distToSub < 140) flicker = Math.min(1, (140 - distToSub) / 140);
-      else flicker = Math.max(0, flicker - dt * 2);
-
-      if (distToSub < 24) {
-        state = "HULL_BREACH";
-      }
-
-      // Update expanding sonar rings and reveal geometry on contact
-      pings.forEach(p => {
-        const prevR = p.r;
-        p.r += dt * 270;
-        p.alpha = Math.max(0, 1 - p.r / p.maxR);
-
-        walls.forEach(w => {
-          const d = Math.hypot(w.x - p.x, w.y - p.y);
-          if (Math.abs(d - p.r) < 18 && Math.random() < 0.45) {
-            const ang = Math.atan2(p.y - w.y, p.x - w.x) + (Math.random() - 0.5) * 1.4;
-            echoes.push({ x: w.x + Math.cos(ang) * w.r, y: w.y + Math.sin(ang) * w.r, alpha: 1.0, col: "#38d9a9" });
-          }
-        });
-
-        beacons.forEach(b => {
-          const d = Math.hypot(b.x - p.x, b.y - p.y);
-          if (prevR <= d && p.r >= d) {
-            echoes.push({ x: b.x, y: b.y, alpha: 1.4, col: b.done ? "#22c55e" : "#fcc419", beacon: true });
-          }
-        });
-
-        const ld = Math.hypot(leviathan.x - p.x, leviathan.y - p.y);
-        if (prevR <= ld && p.r >= ld) {
-          leviathan.revealed = 1.3;
-          echoes.push({ x: leviathan.x, y: leviathan.y, alpha: 1.5, col: "#ff4d6d", threat: true });
-        }
-      });
-      pings = pings.filter(p => p.r < p.maxR);
-      echoes.forEach(e => e.alpha -= dt * 0.38);
-      echoes = echoes.filter(e => e.alpha > 0);
-
-      const doneCount = beacons.filter(b => b.done).length;
-      document.getElementById("beaconsTxt").textContent = `TRANSPONDERS CALIBRATED ${doneCount} / 4`;
-      document.getElementById("powerTxt").textContent = `BATTERY ${Math.round(sub.battery)}% // HEARTBEAT ${sub.bpm} BPM ${silentMode ? "[SILENT]" : ""}`;
+    /* ------------------------------------------------------------------
+       Main loop
+       ------------------------------------------------------------------ */
+    let lastTs = performance.now() / 1000, hudClock = 0;
+    function frame(ts) {
+      const now = ts / 1000, dt = Math.min(0.05, Math.max(0, now - lastTs));
+      lastTs = now; View.clock = now;
+      Game.step(dt);
+      Sound.update(dt);
+      View.sampleTrail(now);
+      Hydro.update(now, dt);
+      View.drawSonar();
+      View.drawCompass();
+      Spectro.draw(dt);
+      hudClock += dt; if (hudClock > 0.1) { hudClock = 0; UI.hud(now); }
+      requestAnimationFrame(frame);
     }
 
-    function draw() {
-      ctx.fillStyle = "#020507";
-      ctx.fillRect(0, 0, W, H);
-
-      // Subtle sonar radar grid
-      ctx.strokeStyle = "rgba(20, 60, 50, 0.28)";
-      ctx.lineWidth = 1;
-      for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-
-      // Active sonar rings
-      pings.forEach(p => {
-        ctx.strokeStyle = `rgba(56, 217, 169, ${p.alpha * 0.75})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.stroke();
-      });
-
-      // Acoustic echoes
-      echoes.forEach(e => {
-        ctx.fillStyle = e.col;
-        ctx.globalAlpha = Math.min(1, e.alpha);
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.beacon || e.threat ? 6 : 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        if (e.beacon || e.threat) {
-          ctx.strokeStyle = e.col;
-          ctx.beginPath();
-          ctx.arc(e.x, e.y, 14, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      });
-      ctx.globalAlpha = 1;
-
-      // Calibration progress ring on nearby beacon
-      beacons.forEach(b => {
-        const d = Math.hypot(sub.x - b.x, sub.y - b.y);
-        if (d < 65 || b.done) {
-          ctx.strokeStyle = b.done ? "#22c55e" : "#fcc419";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, 18, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * (b.prog / 100)));
-          ctx.stroke();
-        }
-      });
-
-      // Leviathan silhouette when pinged
-      if (leviathan.revealed > 0) {
-        ctx.strokeStyle = `rgba(255, 77, 109, ${Math.min(1, leviathan.revealed)})`;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(leviathan.x, leviathan.y, 16, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.font = "bold 11px monospace";
-        ctx.fillStyle = `rgba(255, 77, 109, ${Math.min(1, leviathan.revealed)})`;
-        ctx.fillText("UNIDENTIFIED ACOUSTIC CONTACT", leviathan.x - 85, leviathan.y - 24);
-      }
-
-      // Player submersible
-      ctx.strokeStyle = silentMode ? "#52796f" : "#63e6be";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(sub.x, sub.y, 9, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "#63e6be";
-      ctx.beginPath();
-      ctx.arc(sub.x, sub.y, 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (flicker > 0.05) {
-        ctx.fillStyle = `rgba(255, 40, 70, ${flicker * 0.16})`;
-        ctx.fillRect(0, 0, W, H);
-      }
-
-      if (state === "HULL_BREACH") {
-        ctx.fillStyle = "rgba(8, 2, 4, 0.84)";
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = "#ff4d6d";
-        ctx.font = "bold 28px monospace";
-        ctx.fillText("SIGNAL LOST // HULL BREACH AT 3,840m", 165, 275);
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "15px monospace";
-        ctx.fillText("Press R to deploy backup telemetry bathysphere", 265, 315);
-      } else if (state === "ESCAPED") {
-        ctx.fillStyle = "rgba(2, 12, 10, 0.84)";
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = "#38d9a9";
-        ctx.font = "bold 28px monospace";
-        ctx.fillText("ALL TRANSPONDERS ONLINE // TELEMETRY RESTORED", 95, 275);
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "15px monospace";
-        ctx.fillText("Press R to run another deep-trench dive", 300, 315);
-      }
-    }
-
-    function loop(now) {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      update(dt);
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    initGame();
-    requestAnimationFrame(loop);
+    Log.el = $("log");
+    UI.init();
+    View.init();
+    Spectro.placeAxis();
+    try { if (localStorage.getItem("slr09-muted") === "1") { Sound.muted = true; $("muteBtn").setAttribute("aria-pressed", "true"); $("muteState").textContent = "muted"; } } catch (e) { /* storage unavailable */ }
+    Game.reset();
+    Log.add("Standing by. Relay 09 has gone dark.", "");
+    UI.showOverlay("STANDBY");
+    UI.hud(0);
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>
