@@ -1,6 +1,6 @@
 # Signal Lost - Trench Relay 09
 
-A deep-ocean acoustic sonar survival horror game built with HTML5 Canvas. Pilot a blind bathysphere at 3,840 meters depth where nothing is visible until illuminated by active sonar pings — but every ping reveals your coordinates to an acoustic trench predator.
+A deep-ocean acoustic sonar survival horror game built with HTML5 Canvas. Pilot a blind bathysphere at 3,840 meters depth where nothing is visible until illuminated by active sonar pings, while every ping reveals your coordinates to an acoustic trench predator.
 
 ![Signal Lost Gameplay](signal_lost_sonar.png)
 

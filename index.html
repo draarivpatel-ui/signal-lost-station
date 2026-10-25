@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#010608" />
   <meta name="color-scheme" content="dark" />
   <meta name="description" content="Signal Lost, Trench Relay 09. A blind bathysphere acoustic console with procedural sonar, a hydrophone compass, decoys and four abyssal stations to calibrate." />
+  <meta property="og:title" content="Signal Lost - Trench Relay 09" />
+  <meta property="og:description" content="Signal Lost, Trench Relay 09. A blind bathysphere acoustic console with procedural sonar, a hydrophone compass, decoys and four abyssal stations to calibrate." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://aariv.me/signal-lost-station/" />
+  <meta name="twitter:card" content="summary" />
   <title>Signal Lost - Trench Relay 09</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23020a0c'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%235cf2b0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%235cf2b0'/%3E%3C/svg%3E" />
   <style>
@@ -92,7 +97,11 @@
       transition: background-color 0.18s var(--ease-out), border-color 0.18s var(--ease-out), color 0.18s var(--ease-out), transform 0.12s var(--ease-out);
     }
     .btn:hover { background: rgba(92, 242, 176, 0.12); border-color: var(--ph-mid); }
-    .btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+    html, body { overflow-x: clip; }
+      .skip-link { position: absolute; left: 14px; top: -60px; background: var(--housing); color: var(--ph); border: 1px solid var(--ph); padding: 8px 14px; border-radius: 6px; font-family: var(--body); text-decoration: none; z-index: 30; }
+      .skip-link:focus, .skip-link:focus-visible { top: 14px; }
+      :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+      .btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
     .btn:active { transform: translateY(1px); background: rgba(92, 242, 176, 0.2); }
     .btn[aria-pressed="true"] { border-color: var(--ph); background: rgba(92, 242, 176, 0.16); color: var(--ph); }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
@@ -240,6 +249,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <noscript>This console needs JavaScript to run the sonar simulation.</noscript>
   <div class="rig">
     <header class="rig-top">
@@ -256,7 +266,7 @@
       </button>
     </header>
 
-    <div class="deck">
+    <main class="deck" id="main-content">
       <div class="stage">
         <section class="crt scope" id="scope" aria-label="Sonar scope">
           <canvas id="sonar" role="img" aria-label="Sonar scope. The trench is dark until a ping lights it. Your bathysphere, echoes, stations, decoys and the unidentified contact appear as phosphor points."></canvas>
